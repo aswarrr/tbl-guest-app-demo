@@ -1,0 +1,16 @@
+.floorplan-host-frame-wrap {
+  width: 100%;
+  min-height: 780px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.floorplan-host-frame {
+  display: block;
+  width: 100%;
+  min-height: 780px;
+  border: none;
+  background: #ffffff;
+}

@@ -1,0 +1,126 @@
+<!--index.html-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TBL Floorplan Editor</title>
+  <meta name="description" content="Restaurant floorplan editor — place tables, draw zones, define combine rules, and publish layouts." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ====== LOGIN OVERLAY ====== -->
+  <div id="login-overlay" class="login-overlay">
+    <div class="login-modal">
+      <div class="login-header">
+        <span class="logo">TBL Floorplan</span>
+        <p>Please log in to manage your floorplans.</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" required placeholder="name@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••" />
+        </div>
+        <div id="login-error" class="login-error" style="display:none;"></div>
+        <button type="submit" id="btn-login" class="btn btn-primary full-width">Sign In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====== BRANCH SELECTION OVERLAY ====== -->
+  <div id="branch-overlay" class="login-overlay" style="display: none;">
+    <div class="login-modal" style="max-width: 500px;">
+      <div class="login-header">
+        <span class="logo">Select Branch</span>
+        <p>Choose a branch to edit its floorplan.</p>
+      </div>
+      <div id="branch-list" class="branch-list">
+        <!-- Branches will be injected here -->
+      </div>
+      <div id="branch-loading" style="text-align: center; color: var(--text-dim); padding: 20px;">
+        Loading branches...
+      </div>
+      <div id="branch-error" class="login-error" style="display:none; margin-top: 16px;"></div>
+      <button id="btn-logout-branch" class="btn btn-danger full-width" style="margin-top: 20px;">🚪 Sign Out</button>
+    </div>
+  </div>
+
+  <div class="app" id="main-app" style="display: none;">
+    <!-- ====== TOOLBAR ====== -->
+    <header class="toolbar">
+      <span class="logo">TBL Floorplan</span>
+      <select id="version-selector" class="btn" style="min-width: 150px; margin-left:16px;">
+        <option value="">Loading versions...</option>
+      </select>
+
+      <button id="btn-create-draft" class="btn" style="margin-left: 10px;">📝 Create Draft</button>
+      <button id="btn-publish" class="btn btn-primary" disabled>🚀 Publish</button>
+
+      <div class="spacer"></div>
+      <span id="tool-indicator" class="tool-indicator"></span>
+      <div class="spacer"></div>
+
+      <button id="btn-zone-draw" class="btn">🔷 Draw Zone</button>
+      <button id="btn-combine" class="btn">🔗 Combine</button>
+      <button id="btn-view-mode" class="btn">👁 Guest View</button>
+      <button id="btn-reset" class="btn btn-danger" title="Reset all data">↺ Reset</button>
+      <button id="btn-logout" class="btn" title="Sign Out">🚪 Logout</button>
+    </header>
+
+    <!-- ====== LEFT SIDEBAR ====== -->
+    <aside class="sidebar">
+      <h4>Templates</h4>
+      <div id="templates-list"></div>
+
+      <h4>Floors</h4>
+      <div id="floors-list"></div>
+      <button id="btn-add-floor" class="btn full-width" style="margin-top:6px">+ Add Floor</button>
+
+      <h4>Zones</h4>
+      <div id="zones-list"></div>
+
+      <h4>Combine Edges</h4>
+      <div id="edges-list"></div>
+    </aside>
+
+    <!-- ====== CANVAS ====== -->
+    <main class="canvas-container">
+      <canvas id="floorplan-canvas"></canvas>
+    </main>
+
+    <!-- ====== RIGHT INSPECTOR ====== -->
+    <aside class="inspector">
+      <div id="inspector-content">
+        <p class="empty-text">Select a table or zone to inspect</p>
+      </div>
+    </aside>
+
+    <!-- ====== MOBILE VIEWER OVERLAY ====== -->
+    <div id="mobile-viewer" class="mobile-viewer" style="display:none; touch-action: none;">
+      <div class="mobile-frame">
+        <div class="mobile-notch"></div>
+        <div class="mobile-header">
+          <span class="mobile-title">Floorplan</span>
+          <button id="mobile-close" class="mobile-close-btn">✕</button>
+        </div>
+        <div class="mobile-floor-tabs" id="mobile-floor-tabs"></div>
+        <div class="mobile-zone-chips" id="mobile-zone-chips"></div>
+        <div class="mobile-canvas-wrap">
+          <canvas id="mobile-canvas"></canvas>
+        </div>
+        <div class="mobile-table-info" id="mobile-table-info"></div>
+        <div class="mobile-home-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js?v=7"></script>
+  <script src="app.js?v=7"></script>
+  <script src="canvas.js?v=7"></script>
+  <script src="ui.js?v=7"></script>
+</body>
+</html>
