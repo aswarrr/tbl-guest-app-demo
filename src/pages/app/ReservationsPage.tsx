@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import AppShell from "../../layouts/AppShell";
 import useAuth from "../../hooks/useAuth";
 import ReservationsTable from "../../components/reservations/ReservationsTable";
@@ -46,6 +47,31 @@ export default function ReservationsPage() {
     useState<ReservationRecord | null>(null);
   const [selectedQrReservation, setSelectedQrReservation] =
     useState<ReservationRecord | null>(null);
+
+  // ── Payment redirect handling ──────────────────────────────
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment_status");
+    if (!paymentStatus) return;
+
+    if (paymentStatus === "success") {
+      setSuccessMessage("✅ Payment successful — your reservation has been confirmed!");
+      setReloadCount((c) => c + 1);
+    } else if (paymentStatus === "failed") {
+      const msg = searchParams.get("message");
+      setError(msg ? `Payment failed: ${msg}` : "Payment failed. Please try again.");
+    } else if (paymentStatus === "error") {
+      const msg = searchParams.get("message");
+      setError(msg || "An error occurred during payment verification.");
+    } else {
+      setSuccessMessage("Payment processed — check your reservation status.");
+    }
+
+    // Clean payment params from URL to prevent stale toasts on refresh
+    navigate("/reservations", { replace: true });
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     if (isBootstrapping) return;
