@@ -22,13 +22,8 @@ function getFirstName(user: SessionUser | null) {
 }
 
 function getRoleLabel(user: SessionUser | null) {
-  if (user?.isSuperAdmin) return "Super Admin";
-  if ((user?.companyRoles?.length ?? 0) > 0 && (user?.branchRoles?.length ?? 0) > 0) {
-    return "Company & Branch Access";
-  }
-  if ((user?.companyRoles?.length ?? 0) > 0) return "Company Manager";
-  if ((user?.branchRoles?.length ?? 0) > 0) return "Branch Manager";
-  return "Workspace Member";
+  if (!user) return "Guest Account";
+  return "Guest Account";
 }
 
 function ClockIcon() {

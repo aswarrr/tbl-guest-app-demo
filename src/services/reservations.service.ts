@@ -18,6 +18,11 @@ export const reservationsService = {
     return res.data;
   },
 
+  listMine: async () => {
+    const res = await api.get("/api/reservations/me");
+    return res.data;
+  },
+
   getById: async (reservationId: string, params?: ReservationListParams) => {
     const res = await api.get(`/api/reservations/${reservationId}`, {
       params: {

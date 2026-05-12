@@ -1,19 +1,13 @@
 import React from "react";
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate, Link, useParams } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import SignupPage from "./pages/auth/SignupPage";
 import OtpVerifyPage from "./pages/auth/OtpVerifyPage";
-import InvitationValidatePage from "./pages/auth/InvitationValidatePage";
-import HomePage from "./pages/app/HomePage";
 import ReservationsPage from "./pages/app/ReservationsPage";
-import CompaniesPage from "./pages/app/CompaniesPage";
 import BranchesPage from "./pages/app/BranchesPage";
-import CompleteBranchProfilePage from "./pages/app/CompleteBranchProfilePage";
 import BranchProfilePage from "./pages/app/BranchProfilePage";
 import Loader from "./components/Loader";
 import useAuth from "./hooks/useAuth";
-import { WorkspaceProvider } from "./context/WorkspaceContext";
-import { getReservationAccess } from "./utils/reservations";
 
 function FullPageLoader({ text }: { text: string }) {
   return (
@@ -36,26 +30,7 @@ function ProtectedApp({ children }: { children: React.ReactElement }) {
     return <Navigate to="/login" replace />;
   }
 
-  return <WorkspaceProvider>{children}</WorkspaceProvider>;
-}
-
-function AppHomeRoute() {
-  const { user } = useAuth();
-  const isSuperAdmin = !!user?.isSuperAdmin;
-  const companyRoles = Array.isArray(user?.companyRoles) ? user.companyRoles : [];
-  const branchRoles = Array.isArray(user?.branchRoles) ? user.branchRoles : [];
-  const canAccessBranches = isSuperAdmin || companyRoles.length > 0 || branchRoles.length > 0;
-  const reservationAccess = getReservationAccess(user);
-
-  if (canAccessBranches) {
-    return <Navigate to="/branches" replace />;
-  }
-
-  if (reservationAccess.hasAccess) {
-    return <Navigate to="/reservations" replace />;
-  }
-
-  return <HomePage />;
+  return children;
 }
 
 function GuestOnly({ children }: { children: React.ReactElement }) {
@@ -78,12 +53,28 @@ function NotFoundPage() {
       <div className="card">
         <h2>404</h2>
         <p>Page not found.</p>
-        <Link className="button" to="/">
-          Back Home
+        <Link className="button" to="/restaurants">
+          Browse Restaurants
         </Link>
       </div>
     </div>
   );
+}
+
+function InvitationSignupRedirect() {
+  const { token = "" } = useParams();
+  const target = token
+    ? `/signup?invitationToken=${encodeURIComponent(token)}`
+    : "/signup";
+
+  return <Navigate to={target} replace />;
+}
+
+function LegacyBranchProfileRedirect() {
+  const { branchId = "" } = useParams();
+  const target = branchId ? `/restaurants/${branchId}` : "/restaurants";
+
+  return <Navigate to={target} replace />;
 }
 
 export default function App() {
@@ -93,16 +84,16 @@ export default function App() {
         path="/"
         element={
           <ProtectedApp>
-            <AppHomeRoute />
+            <Navigate to="/restaurants" replace />
           </ProtectedApp>
         }
       />
 
       <Route
-        path="/companies"
+        path="/restaurants"
         element={
           <ProtectedApp>
-            <CompaniesPage />
+            <BranchesPage />
           </ProtectedApp>
         }
       />
@@ -111,7 +102,7 @@ export default function App() {
         path="/branches"
         element={
           <ProtectedApp>
-            <BranchesPage />
+            <Navigate to="/restaurants" replace />
           </ProtectedApp>
         }
       />
@@ -120,13 +111,13 @@ export default function App() {
         path="/companies/:companyId/branches"
         element={
           <ProtectedApp>
-            <BranchesPage />
+            <Navigate to="/restaurants" replace />
           </ProtectedApp>
         }
       />
 
       <Route
-        path="/branches/:branchId/profile"
+        path="/restaurants/:branchId"
         element={
           <ProtectedApp>
             <BranchProfilePage />
@@ -135,33 +126,22 @@ export default function App() {
       />
 
       <Route
-        path="/branches/:branchId/complete-profile"
+        path="/branches/:branchId/profile"
         element={
           <ProtectedApp>
-            <CompleteBranchProfilePage />
-          </ProtectedApp>
-        }
-      />
-
-      {/* Prototype modules temporarily disabled.
-      <Route
-        path="/staff"
-        element={
-          <ProtectedApp>
-            <StaffPage />
+            <LegacyBranchProfileRedirect />
           </ProtectedApp>
         }
       />
 
       <Route
-        path="/invitations"
+        path="/companies"
         element={
           <ProtectedApp>
-            <InvitationsPage />
+            <Navigate to="/restaurants" replace />
           </ProtectedApp>
         }
       />
-      */}
 
       <Route
         path="/reservations"
@@ -171,17 +151,6 @@ export default function App() {
           </ProtectedApp>
         }
       />
-
-      {/* Prototype modules temporarily disabled.
-      <Route
-        path="/debug/session"
-        element={
-          <ProtectedApp>
-            <DashboardPage />
-          </ProtectedApp>
-        }
-      />
-      */}
 
       <Route
         path="/login"
@@ -210,8 +179,8 @@ export default function App() {
         }
       />
 
-      <Route path="/invite/:token" element={<InvitationValidatePage />} />
-      <Route path="/home" element={<Navigate to="/" replace />} />
+      <Route path="/invite/:token" element={<InvitationSignupRedirect />} />
+      <Route path="/home" element={<Navigate to="/restaurants" replace />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

@@ -36,7 +36,14 @@ export default function BranchesPage() {
       setError("");
 
       try {
-        const result = await branchesService.listManaged();
+        const result = await branchesService.listActive(
+          currentLocation
+            ? {
+                userLat: currentLocation.latitude,
+                userLng: currentLocation.longitude,
+              }
+            : undefined
+        );
 
         if (cancelled) return;
 
@@ -133,8 +140,8 @@ export default function BranchesPage() {
         <div className="restaurants-hero-copy">
           <h2 className="admin-page-title">Restaurants</h2>
           <p className="restaurants-subtitle">
-            Active restaurants are sourced from the existing branch endpoints and presented
-            in a guest-friendly gallery view.
+            Browse active restaurants, explore their details, and reserve a table when
+            you're ready.
           </p>
         </div>
 
@@ -163,8 +170,7 @@ export default function BranchesPage() {
         <section className="surface restaurant-empty">
           <div className="restaurant-empty-title">No active restaurants found.</div>
           <p className="restaurant-empty-copy">
-            Try a different search or wait until an active branch becomes available in your
-            scope.
+            Try a different search or check back soon for new restaurants.
           </p>
         </section>
       ) : null}
@@ -182,13 +188,13 @@ export default function BranchesPage() {
                 locatingCurrentLocation
               )}
               onViewDetails={() =>
-                navigate(`/branches/${branch.id}/profile`, {
+                navigate(`/restaurants/${branch.id}`, {
                   state: {
                     companyId: branch.companyId,
                     companyName: branch.companyName || "Restaurant",
                     branchName: branch.name,
                     branchStatus: branch.status,
-                    returnTo: "/branches",
+                    returnTo: "/restaurants",
                   },
                 })
               }

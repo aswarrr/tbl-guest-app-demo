@@ -275,9 +275,6 @@ export default function HomePage() {
 
   const isSuperAdmin = !!user?.isSuperAdmin;
   const companyRoles = Array.isArray(user?.companyRoles) ? user.companyRoles : [];
-  const branchRoles = Array.isArray(user?.branchRoles) ? user.branchRoles : [];
-  const canAccessCompanies = isSuperAdmin || companyRoles.length > 0;
-  const canAccessBranches = canAccessCompanies || branchRoles.length > 0;
   const reservationAccess = getReservationAccess(user);
   const hasCompanyManagerAccess = companyRoles.length > 0;
   const effectiveCompanyId =
@@ -500,7 +497,7 @@ export default function HomePage() {
     : "Not refreshed yet";
 
   const quickActions = buildQuickActions({
-    canAccessRestaurants: canAccessBranches,
+    canAccessRestaurants: true,
     canAccessReservations: reservationAccess.hasAccess,
   });
 

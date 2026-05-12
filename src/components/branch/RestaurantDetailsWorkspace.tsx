@@ -156,7 +156,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
   }, [branchId]);
 
   const companyLabel = branch?.companyName || routeState?.companyName || "Restaurant";
-  const returnTo = routeState?.returnTo || "/branches";
+  const returnTo = routeState?.returnTo || "/restaurants";
   const restaurantSlides = useMemo(
     () => (branch ? buildRestaurantSlides(branch, photos) : []),
     [branch, photos]
@@ -217,7 +217,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
 
   const overviewCopy =
     branch.about ||
-    "This restaurant is active and available in a read-only profile view.";
+    "Explore this restaurant's details and reserve a table when you're ready.";
 
   const identityItems = [
     { label: "Restaurant", value: branch.name || "-" },
@@ -241,7 +241,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
 
         <div className="restaurant-details-hero-layout">
           <div className="restaurant-details-hero-copy">
-            <div className="restaurant-details-eyebrow">Active Restaurant</div>
+            <div className="restaurant-details-eyebrow">Restaurant Profile</div>
             <div className="restaurant-details-title-row">
               <div className="restaurant-details-title-group">
                 <div className="restaurant-details-brand">{companyLabel}</div>

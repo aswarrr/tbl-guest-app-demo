@@ -10,6 +10,11 @@ export const branchesService = {
     return res.data;
   },
 
+  listActive: async (params?: { userLat?: number; userLng?: number }) => {
+    const res = await api.get("/api/branches", { params });
+    return res.data;
+  },
+
   getBranch: async (branchId: string) => {
     const res = await api.get(`/api/branches/${branchId}`);
     return res.data;

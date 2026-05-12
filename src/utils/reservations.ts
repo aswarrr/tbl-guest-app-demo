@@ -6,6 +6,7 @@ import type {
 } from "../types/reservation";
 
 export type ReservationAccessMode =
+  | "GUEST"
   | "SUPER_ADMIN"
   | "COMPANY_MANAGER"
   | "BRANCH_MANAGER"
@@ -124,6 +125,10 @@ export function normalizeReservation(record: ReservationApiRecord): ReservationR
 
   return {
     id: toText(record.id) ?? crypto.randomUUID(),
+    createdByUserId:
+      toText(record.createdByUserId) ??
+      toText(record.created_by) ??
+      toText(record.createdBy),
     branchId: toText(record.branch_id) ?? toText(record.branchId),
     branchName: toText(record.branchName),
     companyName: toText(record.companyName),
@@ -188,6 +193,8 @@ export function formatReservationTables(tableNames: string[]) {
 
 export function formatReservationAccessMode(mode: ReservationAccessMode) {
   switch (mode) {
+    case "GUEST":
+      return "Guest";
     case "SUPER_ADMIN":
       return "Super Admin";
     case "COMPANY_MANAGER":
@@ -284,7 +291,19 @@ export function getReservationAccess(user: SessionUser | null): ReservationAcces
         ? "COMPANY_MANAGER"
         : managedBranches.length > 0
           ? "BRANCH_MANAGER"
-          : "NONE";
+          : user
+            ? "GUEST"
+            : "NONE";
+
+  if (mode === "GUEST") {
+    return {
+      hasAccess: true,
+      mode,
+      scopeRequests: [],
+      managedCompanyCount: 0,
+      managedBranchCount: 0,
+    };
+  }
 
   return {
     hasAccess: scopeRequests.length > 0,

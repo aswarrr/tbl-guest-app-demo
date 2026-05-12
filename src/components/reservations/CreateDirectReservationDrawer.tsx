@@ -383,7 +383,7 @@ export default function CreateDirectReservationDrawer({
     }
 
     void branchesService
-      .listManaged()
+      .listActive()
       .then((result) => {
         if (cancelled) return;
 

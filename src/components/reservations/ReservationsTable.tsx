@@ -99,7 +99,7 @@ export default function ReservationsTable({
   rows,
   loading,
   error,
-  emptyText = "No reservations found for your current access scope.",
+  emptyText = "No reservations found yet.",
   onSelectReservation,
   onOpenQrCode,
 }: Props) {
@@ -134,6 +134,12 @@ export default function ReservationsTable({
       label: "Phone",
       minWidth: 150,
       render: (row) => formatReservationValue(row.customerPhone),
+    },
+    {
+      key: "branchName",
+      label: "Branch Name",
+      minWidth: 180,
+      render: (row) => formatReservationValue(row.branchName),
     },
     {
       key: "customerEmail",

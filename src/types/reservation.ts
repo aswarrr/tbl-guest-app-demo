@@ -1,5 +1,8 @@
 export type ReservationApiRecord = {
   id?: string;
+  created_by?: string | null;
+  createdBy?: string | null;
+  createdByUserId?: string | null;
   branch_id?: string | null;
   branchId?: string | null;
   customer_name?: string | null;
@@ -39,6 +42,7 @@ export type ReservationApiRecord = {
 
 export type ReservationRecord = {
   id: string;
+  createdByUserId: string | null;
   branchId: string | null;
   branchName: string | null;
   companyName: string | null;

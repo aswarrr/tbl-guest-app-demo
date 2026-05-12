@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AppShell from "../../layouts/AppShell";
 import useAuth from "../../hooks/useAuth";
 import ReservationsTable from "../../components/reservations/ReservationsTable";
@@ -10,11 +10,7 @@ import ErrorMessage from "../../components/ErrorMessage";
 import SuccessMessage from "../../components/SuccessMessage";
 import { reservationsService } from "../../services/reservations.service";
 import type { ReservationApiRecord, ReservationRecord } from "../../types/reservation";
-import {
-  formatReservationAccessMode,
-  getReservationAccess,
-  normalizeReservation,
-} from "../../utils/reservations";
+import { normalizeReservation } from "../../utils/reservations";
 
 function resolveArray(result: unknown): ReservationApiRecord[] {
   if (Array.isArray(result)) return result as ReservationApiRecord[];
@@ -34,8 +30,7 @@ function resolveArray(result: unknown): ReservationApiRecord[] {
 }
 
 export default function ReservationsPage() {
-  const { user, isBootstrapping } = useAuth();
-  const access = useMemo(() => getReservationAccess(user), [user]);
+  const { isBootstrapping } = useAuth();
 
   const [reservations, setReservations] = useState<ReservationRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,8 +42,6 @@ export default function ReservationsPage() {
     useState<ReservationRecord | null>(null);
   const [selectedQrReservation, setSelectedQrReservation] =
     useState<ReservationRecord | null>(null);
-
-  // ── Payment redirect handling ──────────────────────────────
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -57,33 +50,24 @@ export default function ReservationsPage() {
     if (!paymentStatus) return;
 
     if (paymentStatus === "success") {
-      setSuccessMessage("✅ Payment successful — your reservation has been confirmed!");
-      setReloadCount((c) => c + 1);
+      setSuccessMessage("Payment successful. Your reservation has been confirmed!");
+      setReloadCount((current) => current + 1);
     } else if (paymentStatus === "failed") {
-      const msg = searchParams.get("message");
-      setError(msg ? `Payment failed: ${msg}` : "Payment failed. Please try again.");
+      const message = searchParams.get("message");
+      setError(
+        message ? `Payment failed: ${message}` : "Payment failed. Please try again."
+      );
     } else if (paymentStatus === "error") {
-      const msg = searchParams.get("message");
-      setError(msg || "An error occurred during payment verification.");
+      setError(searchParams.get("message") || "An error occurred during payment verification.");
     } else {
-      setSuccessMessage("Payment processed — check your reservation status.");
+      setSuccessMessage("Payment processed. Check your reservation status.");
     }
 
-    // Clean payment params from URL to prevent stale toasts on refresh
     navigate("/reservations", { replace: true });
-  }, [searchParams, navigate]);
+  }, [navigate, searchParams]);
 
   useEffect(() => {
     if (isBootstrapping) return;
-
-    if (!access.hasAccess) {
-      setReservations([]);
-      setSelectedReservation(null);
-      setSelectedQrReservation(null);
-      setLoading(false);
-      setError("");
-      return;
-    }
 
     let cancelled = false;
 
@@ -92,9 +76,7 @@ export default function ReservationsPage() {
       setError("");
 
       try {
-        const results = await Promise.all(
-          access.scopeRequests.map((scope) => reservationsService.list(scope.params))
-        );
+        const results = [await reservationsService.listMine()];
 
         if (cancelled) return;
 
@@ -110,19 +92,18 @@ export default function ReservationsPage() {
           }
         }
 
-        const nextReservations = Array.from(uniqueReservations.values());
-        setReservations(nextReservations);
+        setReservations(Array.from(uniqueReservations.values()));
         setSelectedReservation((current) =>
           current ? uniqueReservations.get(current.id) ?? null : null
         );
         setSelectedQrReservation((current) =>
           current ? uniqueReservations.get(current.id) ?? null : null
         );
-      } catch (err: unknown) {
+      } catch (nextError: unknown) {
         if (cancelled) return;
 
         setError(
-          err instanceof Error ? err.message : "Failed to load reservations"
+          nextError instanceof Error ? nextError.message : "Failed to load reservations"
         );
         setReservations([]);
         setSelectedReservation(null);
@@ -139,7 +120,10 @@ export default function ReservationsPage() {
     return () => {
       cancelled = true;
     };
-  }, [access, isBootstrapping, reloadCount]);
+  }, [isBootstrapping, reloadCount]);
+
+  const emptyText =
+    "No reservations found yet. Pick a restaurant and reserve a table to see it here.";
 
   return (
     <AppShell title="Reservations">
@@ -147,39 +131,29 @@ export default function ReservationsPage() {
         <div className="entities-toolbar">
           <div>
             <div className="form-note">
-              Access mode: <strong>{formatReservationAccessMode(access.mode)}</strong>
-            </div>
-            <div className="form-note">
-              Visible scopes: <strong>{access.scopeRequests.length}</strong>
+              View: <strong>Your reservations</strong>
             </div>
           </div>
 
-          {access.hasAccess ? (
-            <div className="entities-toolbar-actions">
-              <button className="primary-dark-btn" onClick={() => setCreateOpen(true)}>
-                + Reserve Table
-              </button>
-            </div>
-          ) : null}
+          <div className="entities-toolbar-actions">
+            <button className="primary-dark-btn" onClick={() => setCreateOpen(true)}>
+              + Reserve Table
+            </button>
+          </div>
         </div>
       </section>
 
       <ErrorMessage message={error} />
       <SuccessMessage message={successMessage} />
 
-      {access.hasAccess ? (
-        <ReservationsTable
-          rows={reservations}
-          loading={loading || isBootstrapping}
-          error=""
-          onSelectReservation={setSelectedReservation}
-          onOpenQrCode={setSelectedQrReservation}
-        />
-      ) : (
-        <section className="surface-muted">
-          This account does not currently have reservation management access.
-        </section>
-      )}
+      <ReservationsTable
+        rows={reservations}
+        loading={loading || isBootstrapping}
+        error=""
+        emptyText={emptyText}
+        onSelectReservation={setSelectedReservation}
+        onOpenQrCode={setSelectedQrReservation}
+      />
 
       <ReservationDetailsDrawer
         reservation={selectedReservation}
