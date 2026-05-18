@@ -269,6 +269,14 @@ function getDurationMinutes(
   return diffMinutes > 0 ? diffMinutes : null;
 }
 
+function getTodayInputMin() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function getErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error) return error.message;
   return fallback;
@@ -662,6 +670,7 @@ export default function CreateDirectReservationDrawer({
     depositAmount !== null && depositAmount > 0
       ? formatPolicyAmount(policies?.depositAmount ?? null)
       : null;
+  const reservationDateMin = getTodayInputMin();
   const submitLabel = depositAmountLabel
     ? `Proceed to Payment (Deposit ${depositAmountLabel})`
     : "Proceed to Payment";
@@ -683,6 +692,10 @@ export default function CreateDirectReservationDrawer({
     setError("");
 
     const partySize = Number(form.partySize);
+    const reservationStart = parseLocalDateTime(
+      form.reservationDate,
+      form.startTime
+    );
     const reservationTime = buildReservationTime(
       form.reservationDate,
       form.startTime
@@ -705,6 +718,11 @@ export default function CreateDirectReservationDrawer({
 
     if (!reservationTime || durationMinutes === null) {
       setError("End time must be later than start time on the same date.");
+      return;
+    }
+
+    if (!reservationStart || reservationStart.getTime() < Date.now()) {
+      setError("Reservation start time cannot be in the past.");
       return;
     }
 
@@ -923,6 +941,7 @@ export default function CreateDirectReservationDrawer({
               id="direct-reservation-date"
               className="input"
               type="date"
+              min={reservationDateMin}
               value={form.reservationDate}
               onChange={(event) => updateField("reservationDate", event.target.value)}
             />
