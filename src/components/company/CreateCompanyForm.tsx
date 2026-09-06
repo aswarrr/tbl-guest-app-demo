@@ -4,6 +4,8 @@ import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
 import { companiesService } from "../../services/companies.service";
 import type { Company } from "../../types/company";
+import { getErrorMessage, unwrapApiRecord } from "../../utils/apiData";
+import { normalizeCompany as normalizeCompanyRecord } from "../../utils/dashboard";
 
 function slugify(value: string) {
   return value
@@ -15,36 +17,12 @@ function slugify(value: string) {
     .replace(/-{2,}/g, "-");
 }
 
-function normalizeCompany(result: any): Company | null {
-  const resolved =
-    result?.data?.company ??
-    result?.data ??
-    result?.company ??
-    result ??
-    null;
+function normalizeCompany(result: unknown): Company | null {
+  const resolved = unwrapApiRecord(result, "company");
+  if (!resolved) return null;
 
-  if (!resolved?.id) return null;
-
-  return {
-    id: resolved.id,
-    name: resolved.name ?? "Unnamed Restaurant",
-    slug: resolved.slug ?? "",
-    about: resolved.about ?? null,
-    logoUrl: resolved.logoUrl ?? null,
-    coverUrl: resolved.coverUrl ?? null,
-    currency: resolved.currency ?? null,
-    cuisineId: resolved.cuisineId ?? null,
-    status: resolved.status ?? null,
-    address: resolved.address ?? null,
-    city: resolved.city ?? null,
-    country: resolved.country ?? null,
-    email: resolved.email ?? null,
-    phone: resolved.phone ?? null,
-    timezone: resolved.timezone ?? null,
-    createdAt: resolved.createdAt ?? resolved.created_at ?? null,
-    updatedAt: resolved.updatedAt ?? resolved.updated_at ?? null,
-    raw: resolved,
-  };
+  const company = normalizeCompanyRecord(resolved);
+  return company.id ? company : null;
 }
 
 export default function CreateCompanyForm({
@@ -155,8 +133,8 @@ export default function CreateCompanyForm({
       );
 
       onCreated(createdCompany, combinedResponse);
-    } catch (err: any) {
-      setError(err.message || "Failed to create restaurant");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to create restaurant"));
     } finally {
       setLoading(false);
     }

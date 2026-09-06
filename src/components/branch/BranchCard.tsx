@@ -6,6 +6,7 @@ import { branchesService } from "../../services/branches.service";
 import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
+import { getErrorMessage } from "../../utils/apiData";
 
 function InfoRow({
   label,
@@ -55,8 +56,8 @@ export default function BranchCard({ branch, onRefreshRequested }: Props) {
       setRawApproveResponse(result);
       setSuccess(result?.message || "Branch approved and is now active.");
       onRefreshRequested?.();
-    } catch (err: any) {
-      setError(err.message || "Failed to approve branch");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to approve branch"));
     } finally {
       setLoading(false);
     }

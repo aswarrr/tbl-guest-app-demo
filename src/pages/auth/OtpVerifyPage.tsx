@@ -10,6 +10,7 @@ import Loader from "../../components/Loader";
 import SuccessMessage from "../../components/SuccessMessage";
 import WarningMessage from "../../components/WarningMessage";
 import useAuth from "../../hooks/useAuth";
+import { safeReturnPath } from "../../white-label/tenant";
 
 const RESEND_DELAY_SECONDS = 10;
 
@@ -17,6 +18,7 @@ type OtpVerifyLocationState = {
   mode?: "signup" | "loginMobileOtp";
   mobile?: string;
   signupPayload?: SignupStartPayload;
+  returnTo?: string;
 };
 
 type AuthTokensResponse = {
@@ -55,6 +57,7 @@ export default function OtpVerifyPage() {
   const mode = locationState.mode;
   const initialMobile = locationState.mobile || "";
   const signupPayload = locationState.signupPayload;
+  const returnTo = safeReturnPath(locationState.returnTo || null);
   const showResendSection = mode === "signup" || mode === "loginMobileOtp";
   const canResendFromState =
     mode === "loginMobileOtp" || (mode === "signup" && Boolean(signupPayload));
@@ -114,7 +117,7 @@ export default function OtpVerifyPage() {
         refreshToken,
       });
 
-      navigate("/");
+      navigate(returnTo);
     } catch (error: unknown) {
       setError(getErrorMessage(error, "OTP verification failed"));
     } finally {
@@ -155,7 +158,7 @@ export default function OtpVerifyPage() {
   };
 
   return (
-    <div className="page">
+    <div className="page wl-auth-page">
       <div className="card auth-card">
         <AuthCardHeader title={title} />
 
@@ -215,7 +218,7 @@ export default function OtpVerifyPage() {
         )}
 
         <div className="auth-footer">
-          <Link to="/login">Back to Login</Link>
+          <Link to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Back to Login</Link>
         </div>
       </div>
     </div>

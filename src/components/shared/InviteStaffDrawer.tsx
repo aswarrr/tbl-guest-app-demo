@@ -4,6 +4,7 @@ import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import { invitationsService } from "../../services/invitations.service";
 import { rolesService, type Role } from "../../services/roles.service";
+import { getErrorMessage, getResponseMessage } from "../../utils/apiData";
 
 type ScopeType = "COMPANY" | "BRANCH";
 
@@ -70,8 +71,8 @@ export default function InviteStaffDrawer({
           setError(`Could not find role "${expectedLabel}" in /api/roles.`);
         }
       })
-      .catch((err: any) => {
-        setError(err.message || "Failed to load roles");
+      .catch((err: unknown) => {
+        setError(getErrorMessage(err, "Failed to load roles"));
       })
       .finally(() => setLoadingRoles(false));
   }, [open, scopeType]);
@@ -115,11 +116,11 @@ export default function InviteStaffDrawer({
         roleId: resolvedRole.id,
       });
 
-      const message = result?.message || "Invitation sent successfully.";
+      const message = getResponseMessage(result, "Invitation sent successfully.");
       onSent?.(message);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to send invitation");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to send invitation"));
     } finally {
       setLoading(false);
     }

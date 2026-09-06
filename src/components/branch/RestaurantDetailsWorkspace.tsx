@@ -84,6 +84,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
   const [branch, setBranch] = useState<Branch | null>(null);
   const [photos, setPhotos] = useState<BranchPhoto[]>([]);
   const [openingHours, setOpeningHours] = useState<BranchOpeningHour[]>([]);
+  const [openingHoursError, setOpeningHoursError] = useState("");
   const [policies, setPolicies] = useState<BranchPolicies | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -98,12 +99,19 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
     const loadRestaurant = async () => {
       setLoading(true);
       setError("");
+      setOpeningHoursError("");
 
       try {
         const [branchResult, photosResult, openingHoursResult, policiesResult] = await Promise.all([
           branchesService.getBranch(branchId),
           branchesService.listBranchPhotos(branchId).catch(() => []),
-          branchesService.getOpeningHours(branchId).catch(() => []),
+          branchesService
+            .getOpeningHours(branchId)
+            .then((result) => ({ result, error: "" }))
+            .catch((nextError: unknown) => ({
+              result: [],
+              error: getErrorMessage(nextError, "Failed to load opening hours."),
+            })),
           branchesService.getBranchPolicies(branchId).catch(() => null),
         ]);
 
@@ -121,7 +129,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
           .map((photo) => normalizeBranchPhoto(photo))
           .filter((photo): photo is BranchPhoto => photo !== null);
 
-        const nextOpeningHours = resolveArray<Record<string, unknown>>(openingHoursResult)
+        const nextOpeningHours = resolveArray<Record<string, unknown>>(openingHoursResult.result)
           .map((row) => normalizeOpeningHour(row))
           .filter((row): row is BranchOpeningHour => row !== null);
         const nextPolicies = normalizeBranchPolicies(
@@ -132,6 +140,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
         setBranch(nextBranch);
         setPhotos(nextPhotos);
         setOpeningHours(nextOpeningHours);
+        setOpeningHoursError(openingHoursResult.error);
         setPolicies(nextPolicies);
       } catch (nextError: unknown) {
         if (cancelled) return;
@@ -139,6 +148,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
         setBranch(null);
         setPhotos([]);
         setOpeningHours([]);
+        setOpeningHoursError("");
         setPolicies(null);
         setError(getErrorMessage(nextError, "Failed to load restaurant details."));
       } finally {
@@ -310,14 +320,22 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
         <section className="surface restaurant-details-section">
           <div className="restaurant-details-section-title">Opening Hours</div>
 
-          <div className="restaurant-hours-list">
-            {orderedOpeningHours.map((item) => (
-              <div key={item.dayOfWeek} className="restaurant-hour-row">
-                <span className="restaurant-hour-day">{item.label}</span>
-                <span className="restaurant-hour-value">{item.value}</span>
-              </div>
-            ))}
-          </div>
+          {openingHoursError ? (
+            <ErrorMessage message={openingHoursError} />
+          ) : openingHours.length === 0 ? (
+            <p className="restaurant-policy-empty">
+              Opening hours are not configured for this restaurant.
+            </p>
+          ) : (
+            <div className="restaurant-hours-list">
+              {orderedOpeningHours.map((item) => (
+                <div key={item.dayOfWeek} className="restaurant-hour-row">
+                  <span className="restaurant-hour-day">{item.label}</span>
+                  <span className="restaurant-hour-value">{item.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
@@ -333,6 +351,7 @@ export default function RestaurantDetailsWorkspace({ branchId, routeState }: Pro
           name: branch.name,
           companyName: branch.companyName || routeState?.companyName || null,
           status: branch.status || null,
+          timezone: branch.timezone || null,
         }}
       />
     </>

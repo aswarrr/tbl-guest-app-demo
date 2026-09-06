@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 export type AdminTableColumn<T> = {
   key: string;
@@ -26,17 +26,12 @@ export default function AdminDataTable<T>({
   const [pageIndex, setPageIndex] = useState(0);
 
   const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
-
-  useEffect(() => {
-    if (pageIndex > totalPages - 1) {
-      setPageIndex(0);
-    }
-  }, [pageIndex, totalPages]);
+  const visiblePageIndex = Math.min(pageIndex, totalPages - 1);
 
   const pageRows = useMemo(() => {
-    const start = pageIndex * pageSize;
+    const start = visiblePageIndex * pageSize;
     return rows.slice(start, start + pageSize);
-  }, [rows, pageIndex, pageSize]);
+  }, [rows, visiblePageIndex, pageSize]);
 
   return (
     <div className="table-shell">
@@ -101,21 +96,21 @@ export default function AdminDataTable<T>({
         <div className="admin-table-pagination">
           <button
             className="admin-table-page-btn"
-            disabled={pageIndex === 0}
-            onClick={() => setPageIndex((prev) => Math.max(0, prev - 1))}
+            disabled={visiblePageIndex === 0}
+            onClick={() => setPageIndex(Math.max(0, visiblePageIndex - 1))}
           >
             Prev
           </button>
 
           <span className="admin-table-page-label">
-            Page {Math.min(pageIndex + 1, totalPages)} of {totalPages}
+            Page {visiblePageIndex + 1} of {totalPages}
           </span>
 
           <button
             className="admin-table-page-btn"
-            disabled={pageIndex >= totalPages - 1}
+            disabled={visiblePageIndex >= totalPages - 1}
             onClick={() =>
-              setPageIndex((prev) => Math.min(totalPages - 1, prev + 1))
+              setPageIndex(Math.min(totalPages - 1, visiblePageIndex + 1))
             }
           >
             Next

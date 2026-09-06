@@ -8,12 +8,14 @@ import AuthCardHeader from "../../components/auth/AuthCardHeader";
 import ErrorMessage from "../../components/ErrorMessage";
 import Loader from "../../components/Loader";
 import SuccessMessage from "../../components/SuccessMessage";
+import { safeReturnPath } from "../../white-label/tenant";
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
   const searchParams = new URLSearchParams(location.search);
+  const returnTo = safeReturnPath(searchParams.get("returnTo"));
   const invitationTokenFromUrl =
     searchParams.get("invitationToken") ||
     searchParams.get("token") ||
@@ -70,11 +72,12 @@ export default function SignupPage() {
       await authService.signupStart(signupPayload);
 
       setSuccess("OTP sent successfully.");
-      navigate("/otp-verify", {
+      navigate("/auth/verify", {
         state: {
           mode: "signup",
           mobile: signupPayload.mobile,
           signupPayload,
+          returnTo,
         },
       });
     } catch (error: unknown) {
@@ -85,7 +88,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="page">
+    <div className="page wl-auth-page">
       <div className="card auth-card">
         <AuthCardHeader title="Sign Up" />
 
@@ -138,15 +141,6 @@ export default function SignupPage() {
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
           />
-          <input
-            className="input"
-            placeholder="Invitation token (optional)"
-            value={form.invitationToken}
-            onChange={(e) =>
-              setForm({ ...form, invitationToken: e.target.value })
-            }
-          />
-
           <button className="button" type="submit" disabled={loading}>
             Sign Up
           </button>
@@ -154,7 +148,7 @@ export default function SignupPage() {
 
         <div className="auth-footer">
           <span>Already have an account?</span>
-          <Link to="/login">Login</Link>
+          <Link to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Login</Link>
         </div>
       </div>
     </div>

@@ -147,9 +147,12 @@ export function normalizeReservation(record: ReservationApiRecord): ReservationR
     specialRequest:
       toText(record.special_request) ?? toText(record.specialRequest),
     createdAt: toText(record.created_at) ?? toText(record.createdAt),
-    canceledAt: toText(record.canceled_at) ?? toText(record.canceledAt),
+    canceledAt:
+      toText(record.cancelledAt) ??
+      toText(record.canceledAt) ??
+      toText(record.canceled_at),
     cancellationReason:
-      toText(record.cancellation_reason) ?? toText(record.cancellationReason),
+      toText(record.cancellationReason) ?? toText(record.cancellation_reason),
     raw: record,
   };
 }

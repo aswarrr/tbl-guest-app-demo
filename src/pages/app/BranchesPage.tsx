@@ -72,7 +72,7 @@ export default function BranchesPage() {
     return () => {
       cancelled = true;
     };
-  }, [companyId]);
+  }, [companyId, currentLocation]);
 
   useEffect(() => {
     if (branches.length === 0) {

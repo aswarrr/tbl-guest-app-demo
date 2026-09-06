@@ -33,5 +33,6 @@ export type ManagedBranchRecord = {
   name?: string | null;
   companyName?: string | null;
   status?: string | null;
+  timezone?: string | null;
   [key: string]: unknown;
 };

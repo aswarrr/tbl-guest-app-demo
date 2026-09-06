@@ -1,10 +1,11 @@
 import { type FormEvent, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { authService } from "../../services/auth.service";
 import AuthCardHeader from "../../components/auth/AuthCardHeader";
 import ErrorMessage from "../../components/ErrorMessage";
 import Loader from "../../components/Loader";
 import useAuth from "../../hooks/useAuth";
+import { safeReturnPath } from "../../white-label/tenant";
 
 type Tab = "email" | "mobilePassword" | "mobileOtp";
 
@@ -37,9 +38,11 @@ function getErrorMessage(error: unknown, fallback: string) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { setSession } = useAuth();
+  const returnTo = safeReturnPath(searchParams.get("returnTo"));
 
-  const [tab, setTab] = useState<Tab>("email");
+  const [tab, setTab] = useState<Tab>("mobileOtp");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,7 +72,7 @@ export default function LoginPage() {
       refreshToken,
     });
 
-    navigate("/");
+    navigate(returnTo);
   };
 
   const handleLoginEmail = async (e: FormEvent) => {
@@ -110,10 +113,11 @@ export default function LoginPage() {
     try {
       await authService.requestMobileOtp(mobileOtpForm);
 
-      navigate("/otp-verify", {
+      navigate("/auth/verify", {
         state: {
           mode: "loginMobileOtp",
           mobile: mobileOtpForm.mobile,
+          returnTo,
         },
       });
     } catch (error: unknown) {
@@ -124,7 +128,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="page">
+    <div className="page wl-auth-page">
       <div className="card auth-card">
         <AuthCardHeader title="Login" />
 
@@ -230,7 +234,7 @@ export default function LoginPage() {
 
         <div className="auth-footer">
           <span>Don&apos;t have an account?</span>
-          <Link to="/signup">Sign up</Link>
+          <Link to={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}>Sign up</Link>
         </div>
       </div>
     </div>

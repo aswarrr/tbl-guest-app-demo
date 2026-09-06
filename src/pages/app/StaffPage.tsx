@@ -3,30 +3,39 @@ import AppShell from "../../layouts/AppShell";
 import useWorkspace from "../../hooks/useWorkspace";
 import { staffService } from "../../services/staff.service";
 import type { StaffMember } from "../../types/staff";
+import type { BranchRole, CompanyRole } from "../../types/auth";
 import StaffTable from "../../components/staff/StaffTable";
 import InviteStaffForm from "../../components/staff/InviteStaffForm";
+import {
+  asApiRecord,
+  getErrorMessage,
+  readNullableString,
+  readString,
+  resolveApiArray,
+} from "../../utils/apiData";
 
-function resolveArray(result: any): any[] {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.data)) return result.data;
-  if (Array.isArray(result?.items)) return result.items;
-  if (Array.isArray(result?.data?.items)) return result.data.items;
-  return [];
-}
-
-function normalizeStaffMember(item: any): StaffMember {
-  const fullName = `${item?.firstName ?? ""} ${item?.lastName ?? ""}`.trim();
+function normalizeStaffMember(item: unknown): StaffMember {
+  const record = asApiRecord(item) ?? {};
+  const fullName = `${readString(record.firstName)} ${readString(record.lastName)}`.trim();
 
   return {
-    id: item?.id ?? crypto.randomUUID(),
-    displayName: fullName || item?.username || item?.email || "Unnamed Staff",
-    username: item?.username,
-    email: item?.email ?? null,
-    mobileE164: item?.mobileE164 ?? null,
-    isSuperAdmin: !!item?.isSuperAdmin,
-    companyRoles: Array.isArray(item?.companyRoles) ? item.companyRoles : [],
-    branchRoles: Array.isArray(item?.branchRoles) ? item.branchRoles : [],
-    raw: item,
+    id: readString(record.id, crypto.randomUUID()),
+    displayName:
+      fullName ||
+      readString(record.username) ||
+      readString(record.email) ||
+      "Unnamed Staff",
+    username: readString(record.username) || undefined,
+    email: readNullableString(record.email),
+    mobileE164: readNullableString(record.mobileE164),
+    isSuperAdmin: record.isSuperAdmin === true,
+    companyRoles: Array.isArray(record.companyRoles)
+      ? (record.companyRoles as CompanyRole[])
+      : [],
+    branchRoles: Array.isArray(record.branchRoles)
+      ? (record.branchRoles as BranchRole[])
+      : [],
+    raw: record,
   };
 }
 
@@ -52,10 +61,10 @@ export default function StaffPage() {
         const result = await staffService.listCompanyStaff(activeCompanyId);
         setRawResponse(result);
 
-        const rows = resolveArray(result).map(normalizeStaffMember);
+        const rows = resolveApiArray<unknown>(result).map(normalizeStaffMember);
         setStaff(rows);
-      } catch (err: any) {
-        setError(err.message || "Failed to load staff");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Failed to load staff"));
         setStaff([]);
       } finally {
         setLoading(false);

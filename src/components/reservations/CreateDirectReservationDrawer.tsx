@@ -31,6 +31,7 @@ type ManagedBranchOption = {
   name: string;
   companyName: string | null;
   status: string | null;
+  timezone: string | null;
 };
 
 type FloorOption = {
@@ -53,6 +54,8 @@ const DAY_NAMES = [
   "Friday",
   "Saturday",
 ] as const;
+
+const DEFAULT_BRANCH_TIMEZONE = "Africa/Cairo";
 
 type FormState = {
   branchId: string;
@@ -179,6 +182,7 @@ function normalizeBranch(record: ManagedBranchRecord): ManagedBranchOption | nul
     name,
     companyName: toText(record.companyName),
     status: toText(record.status),
+    timezone: toText(record.timezone),
   };
 }
 
@@ -232,49 +236,67 @@ function normalizeOpeningHour(record: Record<string, unknown>): BranchOpeningHou
   };
 }
 
-function parseLocalDateTime(dateValue: string, timeValue: string) {
-  const [year, month, day] = dateValue.split("-").map(Number);
-  const [hours, minutes] = timeValue.split(":").map(Number);
+function parseTimeMinutes(timeValue: string) {
+  const match = /^(\d{2}):(\d{2})$/.exec(timeValue);
+  if (!match) return null;
 
-  if (
-    !Number.isInteger(year) ||
-    !Number.isInteger(month) ||
-    !Number.isInteger(day) ||
-    !Number.isInteger(hours) ||
-    !Number.isInteger(minutes)
-  ) {
-    return null;
-  }
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
 
-  const parsed = new Date(year, month - 1, day, hours, minutes, 0, 0);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  return hours * 60 + minutes;
 }
 
-function buildReservationTime(dateValue: string, timeValue: string) {
-  const parsed = parseLocalDateTime(dateValue, timeValue);
-  return parsed ? parsed.toISOString() : null;
-}
+function getDurationMinutes(startTime: string, endTime: string) {
+  const start = parseTimeMinutes(startTime);
+  const end = parseTimeMinutes(endTime);
 
-function getDurationMinutes(
-  dateValue: string,
-  startTime: string,
-  endTime: string
-) {
-  const start = parseLocalDateTime(dateValue, startTime);
-  const end = parseLocalDateTime(dateValue, endTime);
+  if (start === null || end === null) return null;
 
-  if (!start || !end) return null;
-
-  const diffMinutes = Math.round((end.getTime() - start.getTime()) / 60_000);
+  const diffMinutes = end - start;
   return diffMinutes > 0 ? diffMinutes : null;
 }
 
-function getTodayInputMin() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function resolveBranchTimezone(value?: string | null) {
+  const candidate = value || DEFAULT_BRANCH_TIMEZONE;
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: candidate }).format();
+    return candidate;
+  } catch {
+    return DEFAULT_BRANCH_TIMEZONE;
+  }
+}
+
+function getBranchLocalNow(timezone: string) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  const values = new Map(parts.map((part) => [part.type, part.value]));
+
+  return {
+    date: `${values.get("year")}-${values.get("month")}-${values.get("day")}`,
+    time: `${values.get("hour")}:${values.get("minute")}`,
+  };
+}
+
+function isBranchLocalTimeInPast(
+  dateValue: string,
+  timeValue: string,
+  timezone: string
+) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || parseTimeMinutes(timeValue) === null) {
+    return false;
+  }
+
+  const now = getBranchLocalNow(timezone);
+  return `${dateValue}T${timeValue}` < `${now.date}T${now.time}`;
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -303,8 +325,8 @@ function getDayOfWeek(dateValue: string) {
     return null;
   }
 
-  const parsed = new Date(year, month - 1, day, 0, 0, 0, 0);
-  return Number.isNaN(parsed.getTime()) ? null : parsed.getDay();
+  const parsed = new Date(Date.UTC(year, month - 1, day));
+  return Number.isNaN(parsed.getTime()) ? null : parsed.getUTCDay();
 }
 
 function formatOpeningTimeLabel(value: string | null) {
@@ -331,6 +353,7 @@ export default function CreateDirectReservationDrawer({
   const fixedBranchName = fixedBranch?.name ?? null;
   const fixedBranchCompanyName = fixedBranch?.companyName ?? null;
   const fixedBranchStatus = fixedBranch?.status ?? null;
+  const fixedBranchTimezone = fixedBranch?.timezone ?? null;
   const [form, setForm] = useState<FormState>(createInitialForm);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>([]);
   const [branches, setBranches] = useState<ManagedBranchOption[]>([]);
@@ -370,6 +393,7 @@ export default function CreateDirectReservationDrawer({
               name: fixedBranchName || fixedBranchId,
               companyName: fixedBranchCompanyName,
               status: fixedBranchStatus,
+              timezone: fixedBranchTimezone,
             },
           ]
         : []
@@ -423,7 +447,14 @@ export default function CreateDirectReservationDrawer({
     return () => {
       cancelled = true;
     };
-  }, [fixedBranchCompanyName, fixedBranchId, fixedBranchName, fixedBranchStatus, open]);
+  }, [
+    fixedBranchCompanyName,
+    fixedBranchId,
+    fixedBranchName,
+    fixedBranchStatus,
+    fixedBranchTimezone,
+    open,
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -634,11 +665,7 @@ export default function CreateDirectReservationDrawer({
     };
   }, [form.branchId, form.floorId, open]);
 
-  const durationMinutes = getDurationMinutes(
-    form.reservationDate,
-    form.startTime,
-    form.endTime
-  );
+  const durationMinutes = getDurationMinutes(form.startTime, form.endTime);
   const selectedTableLabels = tables
     .filter((table) => selectedTableIds.includes(table.id))
     .map((table) => table.label);
@@ -651,6 +678,8 @@ export default function CreateDirectReservationDrawer({
           ? "Choose tables"
           : "No tables available";
   const activeBranch = branches.find((branch) => branch.id === form.branchId) ?? null;
+  const branchTimezone = resolveBranchTimezone(activeBranch?.timezone);
+  const branchLocalNow = getBranchLocalNow(branchTimezone);
   const selectedDayOfWeek = getDayOfWeek(form.reservationDate);
   const loadingText = loadingBranches
     ? "Loading branches..."
@@ -670,7 +699,7 @@ export default function CreateDirectReservationDrawer({
     depositAmount !== null && depositAmount > 0
       ? formatPolicyAmount(policies?.depositAmount ?? null)
       : null;
-  const reservationDateMin = getTodayInputMin();
+  const reservationDateMin = branchLocalNow.date;
   const submitLabel = depositAmountLabel
     ? `Proceed to Payment (Deposit ${depositAmountLabel})`
     : "Proceed to Payment";
@@ -692,15 +721,6 @@ export default function CreateDirectReservationDrawer({
     setError("");
 
     const partySize = Number(form.partySize);
-    const reservationStart = parseLocalDateTime(
-      form.reservationDate,
-      form.startTime
-    );
-    const reservationTime = buildReservationTime(
-      form.reservationDate,
-      form.startTime
-    );
-
     if (!form.branchId) {
       setError("Branch is required.");
       return;
@@ -716,13 +736,19 @@ export default function CreateDirectReservationDrawer({
       return;
     }
 
-    if (!reservationTime || durationMinutes === null) {
+    if (durationMinutes === null) {
       setError("End time must be later than start time on the same date.");
       return;
     }
 
-    if (!reservationStart || reservationStart.getTime() < Date.now()) {
-      setError("Reservation start time cannot be in the past.");
+    if (
+      isBranchLocalTimeInPast(
+        form.reservationDate,
+        form.startTime,
+        branchTimezone
+      )
+    ) {
+      setError(`Reservation start time cannot be in the past for ${branchTimezone}.`);
       return;
     }
 
@@ -741,7 +767,8 @@ export default function CreateDirectReservationDrawer({
     try {
       const holdResult = await reservationsService.createHold(form.branchId, {
         partySize,
-        reservationTime,
+        reservationDate: form.reservationDate,
+        reservationTimeLocal: form.startTime,
         durationMinutes,
         tableIds: selectedTableIds,
       });
@@ -1003,6 +1030,12 @@ export default function CreateDirectReservationDrawer({
           <strong>
             {durationMinutes === null ? "Enter a valid time range" : `${durationMinutes} minutes`}
           </strong>
+          {form.branchId ? (
+            <>
+              <br />
+              Times shown in <strong>{branchTimezone}</strong>
+            </>
+          ) : null}
         </div>
 
         <div className="form-field">

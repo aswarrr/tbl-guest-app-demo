@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import App from "./App";
 import GlobalLoader from "./components/GlobalLoader";
 import "./styles.css";
+import "./white-label.css";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 

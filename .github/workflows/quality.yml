@@ -1,0 +1,67 @@
+name: Guest app quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out guest app
+        uses: actions/checkout@v4
+        with:
+          path: guest-app
+
+      - name: Check out revamped API contract source
+        uses: actions/checkout@v4
+        with:
+          repository: aswarrr/the_tbl_api-revamp
+          path: tbl-api
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            guest-app/package-lock.json
+            tbl-api/package-lock.json
+
+      - name: Install guest app dependencies
+        working-directory: guest-app
+        run: npm ci
+
+      - name: Install API contract dependencies
+        working-directory: tbl-api
+        run: npm ci --omit=dev --ignore-scripts
+
+      - name: Run lint, TypeScript, and unit tests
+        working-directory: guest-app
+        run: npm run quality
+
+      - name: Verify the cross-repository API contract
+        working-directory: guest-app
+        env:
+          TBL_API_ROOT: ${{ github.workspace }}/tbl-api
+        run: npm run test:contract
+
+      - name: Build the guest app
+        working-directory: guest-app
+        env:
+          VITE_API_BASE_URL: https://api.example.invalid
+        run: npm run build
+
+      - name: Install browser dependencies
+        working-directory: guest-app
+        run: npx playwright install --with-deps chrome
+
+      - name: Run browser integration tests
+        working-directory: guest-app
+        run: npm run test:e2e

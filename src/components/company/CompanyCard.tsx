@@ -5,6 +5,7 @@ import { invitationsService } from "../../services/invitations.service";
 import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
+import { getErrorMessage } from "../../utils/apiData";
 
 type Props = {
   company: Company;
@@ -76,8 +77,8 @@ export default function CompanyCard({ company, onRefreshRequested }: Props) {
       }));
 
       onRefreshRequested();
-    } catch (err: any) {
-      setInviteError(err.message || "Failed to send invitation");
+    } catch (err: unknown) {
+      setInviteError(getErrorMessage(err, "Failed to send invitation"));
     } finally {
       setInviteLoading(false);
     }

@@ -24,6 +24,7 @@ export type ReservationApiRecord = {
   createdAt?: string | null;
   canceled_at?: string | null;
   canceledAt?: string | null;
+  cancelledAt?: string | null;
   cancellation_reason?: string | null;
   cancellationReason?: string | null;
   table_names?: unknown;
@@ -82,7 +83,8 @@ export type ReservationListParams = {
 
 export type CreateReservationHoldPayload = {
   partySize: number;
-  reservationTime: string;
+  reservationDate: string;
+  reservationTimeLocal: string;
   durationMinutes: number;
   tableIds: string[];
 };

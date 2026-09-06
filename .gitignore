@@ -10,7 +10,13 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
+playwright-report
+test-results
 *.local
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +28,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Expo CLI artifacts (this project is a Vite web app, not an Expo app)
+.expo

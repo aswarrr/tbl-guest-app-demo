@@ -1,7 +1,8 @@
 import useAuth from "../hooks/useAuth";
 import useWorkspace from "../hooks/useWorkspace";
+import type { SessionUser } from "../types/auth";
 
-function getDisplayName(user: any) {
+function getDisplayName(user: SessionUser | null) {
   if (!user) return "Unknown User";
 
   const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();

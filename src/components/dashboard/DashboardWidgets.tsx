@@ -142,12 +142,13 @@ export function DashboardDonutChartCard({
   const palette = ["#2563eb", "#0f766e", "#d97706", "#7c3aed", "#dc2626", "#475569"];
   const total = data.reduce((sum, entry) => sum + entry.value, 0);
 
-  let cursor = 0;
   const segments = data.map((entry, index) => {
     const color = entry.color ?? palette[index % palette.length];
     const size = total > 0 ? (entry.value / total) * 100 : 0;
+    const cursor = data
+      .slice(0, index)
+      .reduce((sum, previous) => sum + (total > 0 ? (previous.value / total) * 100 : 0), 0);
     const segment = `${color} ${cursor}% ${cursor + size}%`;
-    cursor += size;
     return { ...entry, color, segment };
   });
 

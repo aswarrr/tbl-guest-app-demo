@@ -503,7 +503,7 @@ export default function BranchProfileWorkspace({
           <BranchPhotoManager
             branchId={branchId}
             showDebug={false}
-            onPhotoCountChange={(count) => setPhotoCount(count)}
+            onPhotoCountChange={setPhotoCount}
           />
 
           <div
@@ -548,7 +548,7 @@ export default function BranchProfileWorkspace({
           <OpeningHoursEditor
             branchId={branchId}
             showDebug={false}
-            onConfiguredChange={(configured) => setHasConfiguredOpeningHours(configured)}
+            onConfiguredChange={setHasConfiguredOpeningHours}
           />
 
           <div

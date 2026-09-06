@@ -6,6 +6,8 @@ import MapPicker from "./MapPicker";
 import { companiesService } from "../../services/companies.service";
 import { branchesService } from "../../services/branches.service";
 import type { Branch } from "../../types/branch";
+import { getErrorMessage, unwrapApiRecord } from "../../utils/apiData";
+import { normalizeBranch as normalizeBranchRecord } from "../../utils/restaurants";
 
 const COUNTRY_OPTIONS = ["Egypt"];
 
@@ -49,46 +51,8 @@ function slugify(value: string) {
     .replace(/-{2,}/g, "-");
 }
 
-function normalizeBranch(result: any): Branch | null {
-  const resolved =
-    result?.data?.branch ??
-    result?.data ??
-    result?.branch ??
-    result ??
-    null;
-
-  if (!resolved?.id) return null;
-
-  return {
-    id: resolved.id,
-    companyId: resolved.companyId ?? "",
-    name: resolved.name ?? "",
-    slug: resolved.slug ?? "",
-    addressLine1: resolved.addressLine1 ?? "",
-    addressLine2: resolved.addressLine2 ?? null,
-    area: resolved.area ?? null,
-    city: resolved.city ?? "",
-    governorate: resolved.governorate ?? null,
-    postalCode: resolved.postalCode ?? null,
-    landmark: resolved.landmark ?? null,
-    country: resolved.country ?? "",
-    latitude: Number(resolved.latitude ?? 0),
-    longitude: Number(resolved.longitude ?? 0),
-    phone: resolved.phone ?? null,
-    email: resolved.email ?? null,
-    timezone: resolved.timezone ?? null,
-    status: resolved.status ?? null,
-    about: resolved.about ?? null,
-    placeId: resolved.placeId ?? null,
-    geocodeProvider: resolved.geocodeProvider ?? null,
-    geocodeAccuracy: resolved.geocodeAccuracy ?? null,
-    coverUrl: resolved.coverUrl ?? null,
-    amenitiesMode: resolved.amenitiesMode ?? null,
-    tagsMode: resolved.tagsMode ?? null,
-    createdAt: resolved.createdAt ?? null,
-    updatedAt: resolved.updatedAt ?? null,
-    raw: resolved,
-  };
+function normalizeBranch(result: unknown): Branch | null {
+  return normalizeBranchRecord(unwrapApiRecord(result, "branch"));
 }
 
 type Props = {
@@ -296,8 +260,8 @@ export default function BranchDrawerForm({
       });
 
       onSaved(normalizeBranch(result), "Branch saved successfully.");
-    } catch (err: any) {
-      setError(err.message || "Failed to save branch");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to save branch"));
     } finally {
       setLoading(false);
     }

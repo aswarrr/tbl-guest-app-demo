@@ -5,6 +5,8 @@ import SuccessMessage from "../SuccessMessage";
 import MapPicker from "./MapPicker";
 import { companiesService } from "../../services/companies.service";
 import type { Branch } from "../../types/branch";
+import { getErrorMessage, unwrapApiRecord } from "../../utils/apiData";
+import { normalizeBranch as normalizeBranchRecord } from "../../utils/restaurants";
 
 const CITY_OPTIONS = [
   "Cairo",
@@ -37,46 +39,8 @@ function slugify(value: string) {
     .replace(/-{2,}/g, "-");
 }
 
-function normalizeBranch(result: any): Branch | null {
-  const resolved =
-    result?.data?.branch ??
-    result?.data ??
-    result?.branch ??
-    result ??
-    null;
-
-  if (!resolved?.id) return null;
-
-  return {
-    id: resolved.id,
-    companyId: resolved.companyId,
-    name: resolved.name ?? "Unnamed Branch",
-    slug: resolved.slug ?? "",
-    addressLine1: resolved.addressLine1 ?? "",
-    addressLine2: resolved.addressLine2 ?? null,
-    area: resolved.area ?? null,
-    city: resolved.city ?? "",
-    governorate: resolved.governorate ?? null,
-    postalCode: resolved.postalCode ?? null,
-    landmark: resolved.landmark ?? null,
-    country: resolved.country ?? "",
-    latitude: Number(resolved.latitude ?? 0),
-    longitude: Number(resolved.longitude ?? 0),
-    phone: resolved.phone ?? null,
-    email: resolved.email ?? null,
-    timezone: resolved.timezone ?? null,
-    status: resolved.status ?? null,
-    about: resolved.about ?? null,
-    placeId: resolved.placeId ?? null,
-    geocodeProvider: resolved.geocodeProvider ?? null,
-    geocodeAccuracy: resolved.geocodeAccuracy ?? null,
-    coverUrl: resolved.coverUrl ?? null,
-    amenitiesMode: resolved.amenitiesMode ?? null,
-    tagsMode: resolved.tagsMode ?? null,
-    createdAt: resolved.createdAt ?? resolved.created_at ?? null,
-    updatedAt: resolved.updatedAt ?? resolved.updated_at ?? null,
-    raw: resolved,
-  };
+function normalizeBranch(result: unknown): Branch | null {
+  return normalizeBranchRecord(unwrapApiRecord(result, "branch"));
 }
 
 export default function CreateBranchForm({
@@ -169,8 +133,8 @@ export default function CreateBranchForm({
       setRawResponse(result);
       setSuccess("Branch created successfully.");
       onCreated(normalizeBranch(result), result);
-    } catch (err: any) {
-      setError(err.message || "Failed to create branch");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to create branch"));
     } finally {
       setLoading(false);
     }

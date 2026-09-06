@@ -12,7 +12,13 @@ import {
 } from "../utils/tokenStorage";
 import { loadingService } from "./loading.service";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const configuredBaseURL = import.meta.env.VITE_API_BASE_URL?.trim();
+
+if (import.meta.env.PROD && !configuredBaseURL) {
+  throw new Error("VITE_API_BASE_URL is required in production.");
+}
+
+const baseURL = (configuredBaseURL || "http://localhost:4006").replace(/\/$/, "");
 
 export const api = axios.create({
   baseURL,
@@ -35,17 +41,23 @@ let refreshTokensPromise: Promise<string | null> | null = null;
 
 function attachLoadingInterceptors(client: AxiosInstance) {
   client.interceptors.request.use((config) => {
-    loadingService.setLoading(true);
+    if (!config.skipGlobalLoading) {
+      loadingService.setLoading(true);
+    }
     return config;
   });
 
   client.interceptors.response.use(
     (response) => {
-      loadingService.setLoading(false);
+      if (!response.config.skipGlobalLoading) {
+        loadingService.setLoading(false);
+      }
       return response;
     },
     (error) => {
-      loadingService.setLoading(false);
+      if (!error.config?.skipGlobalLoading) {
+        loadingService.setLoading(false);
+      }
       return Promise.reject(error);
     }
   );

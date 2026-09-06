@@ -1,10 +1,22 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import Modal from "../Modal";
 import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
 import { branchesService } from "../../services/branches.service";
 import type { BranchPhoto, BranchPhotoKind } from "../../types/branch";
+import {
+  getErrorMessage,
+  normalizeBranchPhoto,
+  resolveArray,
+} from "../../utils/restaurants";
 
 const PHOTO_KIND_OPTIONS: BranchPhotoKind[] = [
   "INTERIOR",
@@ -14,27 +26,6 @@ const PHOTO_KIND_OPTIONS: BranchPhotoKind[] = [
   "ENTRANCE",
   "OTHER",
 ];
-
-function normalizePhoto(item: any): BranchPhoto {
-  return {
-    id: item?.id ?? "",
-    branchId: item?.branchId ?? "",
-    url: item?.url ?? "",
-    kind: item?.kind ?? "OTHER",
-    caption: item?.caption ?? null,
-    sortOrder: item?.sortOrder ?? null,
-    createdAt: item?.createdAt ?? null,
-    updatedAt: item?.updatedAt ?? null,
-    raw: item,
-  };
-}
-
-function resolveArray(result: any): any[] {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.data)) return result.data;
-  if (Array.isArray(result?.items)) return result.items;
-  return [];
-}
 
 function reorderArray<T>(items: T[], fromIndex: number, toIndex: number) {
   const next = [...items];
@@ -85,28 +76,30 @@ export default function BranchPhotoManager({
     });
   }, [photos]);
 
-  const refreshPhotos = async () => {
+  const refreshPhotos = useCallback(async () => {
     setInitialLoading(true);
     setError("");
 
     try {
       const result = await branchesService.listBranchPhotos(branchId);
-      const next = resolveArray(result).map(normalizePhoto);
+      const next = resolveArray<Record<string, unknown>>(result)
+        .map(normalizeBranchPhoto)
+        .filter((photo): photo is BranchPhoto => photo !== null);
       setPhotos(next);
       onPhotoCountChange?.(next.length);
       setRawResponse(result);
-    } catch (err: any) {
-      setError(err.message || "Failed to load branch photos");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load branch photos"));
       setPhotos([]);
       onPhotoCountChange?.(0);
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [branchId, onPhotoCountChange]);
 
   useEffect(() => {
     void refreshPhotos();
-  }, [branchId]);
+  }, [refreshPhotos]);
 
   const handleOpenFilePicker = () => {
     inputRef.current?.click();
@@ -140,8 +133,8 @@ export default function BranchPhotoManager({
         setRawResponse(result);
         setSuccess(`Uploaded "${file.name}" successfully.`);
         await refreshPhotos();
-      } catch (err: any) {
-        setError(err.message || `Failed to upload "${file.name}"`);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, `Failed to upload "${file.name}"`));
       } finally {
         setLoading(false);
       }
@@ -161,8 +154,8 @@ export default function BranchPhotoManager({
       setRawResponse(result);
       setSuccess("Photo deleted successfully.");
       await refreshPhotos();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete photo");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to delete photo"));
     } finally {
       setLoading(false);
     }
@@ -183,8 +176,8 @@ export default function BranchPhotoManager({
 
       setSuccess("All branch photos were deleted.");
       await refreshPhotos();
-    } catch (err: any) {
-      setError(err.message || "Failed to delete all photos");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to delete all photos"));
     } finally {
       setLoading(false);
     }
@@ -217,8 +210,8 @@ export default function BranchPhotoManager({
       setRawResponse(result);
       setSuccess("Photos reordered successfully.");
       await refreshPhotos();
-    } catch (err: any) {
-      setError(err.message || "Failed to reorder photos");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to reorder photos"));
     }
   };
 

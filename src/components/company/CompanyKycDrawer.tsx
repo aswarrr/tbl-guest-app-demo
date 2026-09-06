@@ -4,6 +4,12 @@ import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import { companiesService } from "../../services/companies.service";
 import type { Company } from "../../types/company";
+import {
+  getErrorMessage,
+  getResponseMessage,
+  readString,
+  unwrapApiRecord,
+} from "../../utils/apiData";
 
 type Props = {
   open: boolean;
@@ -12,17 +18,17 @@ type Props = {
   onSubmitted: (message: string) => void;
 };
 
-function normalizeKyc(result: any) {
-  const resolved = result?.data ?? result ?? null;
+function normalizeKyc(result: unknown) {
+  const resolved = unwrapApiRecord(result);
   if (!resolved) return null;
 
   return {
-    business_legal_name: resolved.business_legal_name ?? "",
-    owner_name: resolved.owner_name ?? "",
-    tax_registration_number: resolved.tax_registration_number ?? "",
-    bank_name: resolved.bank_name ?? "",
-    bank_account_number: resolved.bank_account_number ?? "",
-    bank_iban: resolved.bank_iban ?? "",
+    business_legal_name: readString(resolved.business_legal_name),
+    owner_name: readString(resolved.owner_name),
+    tax_registration_number: readString(resolved.tax_registration_number),
+    bank_name: readString(resolved.bank_name),
+    bank_account_number: readString(resolved.bank_account_number),
+    bank_iban: readString(resolved.bank_iban),
   };
 }
 
@@ -77,8 +83,8 @@ export default function CompanyKycDrawer({
         if (!normalized) return;
         setForm(normalized);
       })
-      .catch((err: any) => {
-        const message = String(err?.message || "").toLowerCase();
+      .catch((err: unknown) => {
+        const message = getErrorMessage(err, "").toLowerCase();
 
         if (
           message.includes("not found") ||
@@ -88,7 +94,7 @@ export default function CompanyKycDrawer({
           return;
         }
 
-        setError(err.message || "Failed to load KYC data");
+        setError(getErrorMessage(err, "Failed to load KYC data"));
       })
       .finally(() => setLoadingInitial(false));
   }, [open, company?.id, submitMode]);
@@ -130,10 +136,10 @@ export default function CompanyKycDrawer({
         bank_iban: form.bank_iban.trim(),
       });
 
-      onSubmitted(result?.message || "KYC saved successfully.");
+      onSubmitted(getResponseMessage(result, "KYC saved successfully."));
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to submit KYC");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to submit KYC"));
     } finally {
       setLoading(false);
     }

@@ -1,32 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import ErrorMessage from "../ErrorMessage";
 import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
 import { branchesService } from "../../services/branches.service";
 import type { BranchOpeningHour } from "../../types/branch";
+import {
+  getErrorMessage,
+  normalizeOpeningHour,
+  resolveArray,
+} from "../../utils/restaurants";
 
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-function resolveArray(result: any): any[] {
-  if (Array.isArray(result)) return result;
-  if (Array.isArray(result?.data)) return result.data;
-  if (Array.isArray(result?.items)) return result.items;
-  return [];
-}
-
-function normalizeHour(item: any): BranchOpeningHour {
-  return {
-    id: item?.id ?? "",
-    branchId: item?.branchId ?? "",
-    dayOfWeek: Number(item?.dayOfWeek ?? 0),
-    openTime: item?.openTime ?? null,
-    closeTime: item?.closeTime ?? null,
-    isClosed: !!item?.isClosed,
-    createdAt: item?.createdAt ?? null,
-    updatedAt: item?.updatedAt ?? null,
-    raw: item,
-  };
-}
 
 function toInputTime(value: string | null) {
   if (!value) return "12:00";
@@ -78,28 +62,30 @@ export default function OpeningHoursEditor({
     [rows]
   );
 
-  const refreshHours = async () => {
+  const refreshHours = useCallback(async () => {
     setInitialLoading(true);
     setError("");
 
     try {
       const result = await branchesService.getOpeningHours(branchId);
-      const next = resolveArray(result).map(normalizeHour);
+      const next = resolveArray<Record<string, unknown>>(result)
+        .map(normalizeOpeningHour)
+        .filter((hour): hour is BranchOpeningHour => hour !== null);
       setRows(next);
       onConfiguredChange?.(isConfigured(next));
       setRawResponse(result);
-    } catch (err: any) {
-      setError(err.message || "Failed to load opening hours");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load opening hours"));
       setRows([]);
       onConfiguredChange?.(false);
     } finally {
       setInitialLoading(false);
     }
-  };
+  }, [branchId, onConfiguredChange]);
 
   useEffect(() => {
     void refreshHours();
-  }, [branchId]);
+  }, [refreshHours]);
 
   const updateRow = (
     dayOfWeek: number,
@@ -129,14 +115,16 @@ export default function OpeningHoursEditor({
       };
 
       const result = await branchesService.updateOpeningHours(branchId, payload);
-      const next = resolveArray(result).map(normalizeHour);
+      const next = resolveArray<Record<string, unknown>>(result)
+        .map(normalizeOpeningHour)
+        .filter((hour): hour is BranchOpeningHour => hour !== null);
 
       setRows(next);
       setRawResponse(result);
       setSuccess("Opening hours updated successfully.");
       onConfiguredChange?.(isConfigured(next));
-    } catch (err: any) {
-      setError(err.message || "Failed to update opening hours");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to update opening hours"));
     } finally {
       setLoading(false);
     }

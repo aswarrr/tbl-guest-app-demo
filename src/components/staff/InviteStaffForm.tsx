@@ -4,6 +4,7 @@ import Loader from "../Loader";
 import SuccessMessage from "../SuccessMessage";
 import useWorkspace from "../../hooks/useWorkspace";
 import { invitationsService } from "../../services/invitations.service";
+import { getErrorMessage } from "../../utils/apiData";
 
 export default function InviteStaffForm() {
   const {
@@ -78,8 +79,8 @@ export default function InviteStaffForm() {
         ...prev,
         destination: "",
       }));
-    } catch (err: any) {
-      setError(err.message || "Failed to create invitation");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to create invitation"));
     } finally {
       setLoading(false);
     }

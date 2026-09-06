@@ -1,6 +1,4 @@
 import {
-  createContext,
-  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -13,10 +11,7 @@ import type {
   WorkspaceContextValue,
   WorkspaceRoleOption,
 } from "../types/workspace";
-
-export const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(
-  undefined
-);
+import { WorkspaceContext } from "./workspace-context";
 
 function buildCompanies(
   companyRoles: CompanyRole[] = [],
@@ -116,63 +111,40 @@ function buildRoleOptions(
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
-  const userCompanyRoles = Array.isArray(user?.companyRoles)
-    ? user.companyRoles
-    : [];
-  const userBranchRoles = Array.isArray(user?.branchRoles) ? user.branchRoles : [];
+  const userCompanyRoles = useMemo(
+    () => (Array.isArray(user?.companyRoles) ? user.companyRoles : []),
+    [user]
+  );
+  const userBranchRoles = useMemo(
+    () => (Array.isArray(user?.branchRoles) ? user.branchRoles : []),
+    [user]
+  );
 
   const companies = useMemo(
     () => buildCompanies(userCompanyRoles, userBranchRoles),
     [userCompanyRoles, userBranchRoles]
   );
 
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
-  const [activeBranchId, setActiveBranchId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!companies.length) {
-      setActiveCompanyId(null);
-      return;
-    }
-
-    const stillExists = companies.some(
-      (company) => company.companyId === activeCompanyId
-    );
-
-    if (!stillExists) {
-      setActiveCompanyId(companies[0].companyId);
-    }
-  }, [companies, activeCompanyId]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
+  const activeCompanyId = companies.some(
+    (company) => company.companyId === selectedCompanyId
+  )
+    ? selectedCompanyId
+    : companies[0]?.companyId ?? null;
 
   const branches = useMemo(
     () => buildBranches(userBranchRoles, activeCompanyId),
     [userBranchRoles, activeCompanyId]
   );
 
-  useEffect(() => {
-    if (!activeBranchId) return;
-
-    const stillExists = branches.some((branch) => branch.branchId === activeBranchId);
-
-    if (!stillExists) {
-      setActiveBranchId(null);
-    }
-  }, [branches, activeBranchId]);
-
-  useEffect(() => {
-    if (userCompanyRoles.length > 0) return;
-
-    if (!branches.length) {
-      setActiveBranchId(null);
-      return;
-    }
-
-    const stillExists = branches.some((branch) => branch.branchId === activeBranchId);
-
-    if (!stillExists) {
-      setActiveBranchId(branches[0].branchId);
-    }
-  }, [branches, activeBranchId, userCompanyRoles.length]);
+  const activeBranchId = branches.some(
+    (branch) => branch.branchId === selectedBranchId
+  )
+    ? selectedBranchId
+    : userCompanyRoles.length === 0
+      ? branches[0]?.branchId ?? null
+      : null;
 
   const activeCompany = useMemo(
     () =>
@@ -203,10 +175,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       activeScopeType,
       activeRoleOptions,
       setActiveCompanyId: (companyId) => {
-        setActiveCompanyId(companyId);
-        setActiveBranchId(null);
+        setSelectedCompanyId(companyId);
+        setSelectedBranchId(null);
       },
-      setActiveBranchId,
+      setActiveBranchId: setSelectedBranchId,
     }),
     [
       companies,

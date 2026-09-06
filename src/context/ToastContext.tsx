@@ -89,11 +89,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    const timeoutMap = timeoutMapRef.current;
+
     return () => {
-      timeoutMapRef.current.forEach((timeoutId) => {
+      timeoutMap.forEach((timeoutId) => {
         window.clearTimeout(timeoutId);
       });
-      timeoutMapRef.current.clear();
+      timeoutMap.clear();
     };
   }, []);
 
