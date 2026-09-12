@@ -1,13 +1,16 @@
+import { previewMode } from "../website/mode";
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
 export const AUTH_STORAGE_EVENT = "tbl-auth-storage-changed";
 
 export function getAccessToken() {
+  if(previewMode) return null;
   return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 export function getRefreshToken() {
+  if(previewMode) return null;
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
@@ -15,6 +18,7 @@ export function setTokens(payload: {
   accessToken?: string | null;
   refreshToken?: string | null;
 }) {
+  if(previewMode) return;
   const { accessToken, refreshToken } = payload;
 
   if (accessToken !== undefined) {
@@ -31,6 +35,7 @@ export function setTokens(payload: {
 }
 
 export function clearTokens() {
+  if(previewMode) return;
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   window.dispatchEvent(new CustomEvent(AUTH_STORAGE_EVENT));

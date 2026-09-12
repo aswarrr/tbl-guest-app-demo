@@ -11,19 +11,38 @@ describe("white-label customer API", () => {
     apiMock.post.mockReset();
   });
 
-  it("filters published branches by company slug", async () => {
+  it("asks the API for one restaurant's branches instead of the whole catalog", async () => {
     apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: [
       { id: "s1", companySlug: "sizzler-steak-house-and-co" },
-      { id: "x1", companySlug: "another-brand" },
     ] } });
 
     await expect(customerService.listTenantBranches("sizzler-steak-house-and-co")).resolves.toEqual([
       { id: "s1", companySlug: "sizzler-steak-house-and-co" },
     ]);
+    // One request, filtered server-side: paging the platform and discarding
+    // other companies in the browser does not scale past the first page.
+    expect(apiMock.get).toHaveBeenCalledTimes(1);
     expect(apiMock.get).toHaveBeenCalledWith("/api/mobile/branches", {
-      params: { limit: 100, offset: 0 },
+      params: { companySlug: "sizzler-steak-house-and-co", limit: 100 },
       skipGlobalLoading: true,
     });
+  });
+
+  it("reads restaurant branding by slug from the public company endpoint", async () => {
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: { slug: "farida-steakhouse", name: "Farida" } } });
+
+    await expect(customerService.getCompany("farida-steakhouse")).resolves.toMatchObject({
+      name: "Farida",
+    });
+    expect(apiMock.get).toHaveBeenCalledWith("/api/companies/slug/farida-steakhouse", {
+      skipGlobalLoading: true,
+    });
+  });
+
+  it("treats an unpublished menu as no menu rather than an error", async () => {
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: null } });
+
+    await expect(customerService.getTenantMenu("farida-steakhouse")).resolves.toBeNull();
   });
 
   it("creates a hold through the mobile contract without changing table IDs", async () => {

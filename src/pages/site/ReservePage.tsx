@@ -1,9 +1,11 @@
+import { ReservationFrame, ReservationLocations } from "../../website/reservation-presentation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PaymentModal from "../../components/site/PaymentModal";
 import PaymentMethodSelector from "../../components/site/PaymentMethodSelector";
 import useAuth from "../../hooks/useAuth";
 import useTenant from "../../hooks/useTenant";
+import useTenantPath from "../../hooks/useTenantPath";
 import { customerService } from "../../white-label/customer.service";
 import { addDays, branchLocalDate, branchShortName, formatDate, formatMoney, formatTime } from "../../white-label/format";
 import { clearReservationDraft, loadReservationDraft, saveReservationDraft } from "../../white-label/tenant";
@@ -27,6 +29,7 @@ function HoldCountdown({ expiresAt }: { expiresAt: string | null }) {
 
 export default function ReservePage() {
   const { tenant, tenantSlug, branches } = useTenant();
+  const tenantPath = useTenantPath();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -129,14 +132,14 @@ export default function ReservePage() {
     clearReservationDraft(tenantSlug);
     setPaymentOpen(false);
     setPayment(null);
-    navigate(`/reservation/${confirmed.id}/confirmation`, { state: { reservation: confirmed } });
-  }, [navigate, pendingPaymentKey, tenantSlug]);
+    navigate(`${tenantPath("reservation")}/${confirmed.id}/confirmation`, { state: { reservation: confirmed } });
+  }, [navigate, pendingPaymentKey, tenantSlug, tenantPath]);
 
   const submitReservation = async () => {
     if (!draft.seatingOption || !branch) return;
     if (!isAuthenticated) {
       saveReservationDraft(tenantSlug, { ...draft, step: 4 });
-      navigate(`/auth/login?returnTo=${encodeURIComponent("/reserve?resume=review")}`);
+      navigate(`${tenantPath("auth/login")}?returnTo=${encodeURIComponent(`${tenantPath("reserve")}?resume=review`)}`);
       return;
     }
 
@@ -177,17 +180,13 @@ export default function ReservePage() {
   };
 
   if (!tenant || !branch) return null;
-  const progress = ["Branch", "Date & time", "Your table", "Review"];
+
 
   return (
-    <div className="wl-reserve-page">
-      <header className="wl-reserve-header"><span className="wl-kicker">Reservations</span><h1>Find your table.</h1><p>Live availability at both Sizzler locations.</p></header>
-      <ol className="wl-progress">{progress.map((label, index) => <li className={draft.step >= index + 1 ? "is-active" : ""} key={label}><span>{index + 1}</span>{label}</li>)}</ol>
-      <div className="wl-booking-layout">
-        <section className="wl-booking-panel" aria-busy={loading}>
+    <><ReservationFrame step={draft.step} summary={<><span className="wl-kicker">Your reservation</span><img src={branch.coverImageUrl || branch.photos[0]?.url} alt="" /><h2>{branchShortName(branch)}</h2><p>{branch.addressSummary}</p><dl><div><dt>Date</dt><dd>{formatDate(draft.reservationDate, branch.timezone)}</dd></div><div><dt>Time</dt><dd>{draft.reservationTimeLocal ? formatTime(draft.reservationTimeLocal) : "Choose a time"}</dd></div><div><dt>Guests</dt><dd>{draft.partySize}</dd></div><div><dt>Table</dt><dd>{draft.seatingOption?.name || "Choose a table"}</dd></div></dl>{reservation ? <div className="wl-hold-timer"><HoldCountdown expiresAt={reservation.holdExpiresAt} /></div> : null}</>}>
           {error ? <div className="wl-inline-error" role="alert">{error}</div> : null}
           {draft.step === 1 ? (
-            <div><span className="wl-kicker">Step 1</span><h2>Choose a location</h2><div className="wl-branch-options">{branches.map((item) => <button className={draft.branchId === item.id ? "is-selected" : ""} type="button" key={item.id} onClick={() => chooseBranch(item.id)}><img src={item.coverImageUrl || item.photos[0]?.url} alt="" /><span><strong>{branchShortName(item)}</strong><small>{item.addressSummary}</small></span><i aria-hidden="true">✓</i></button>)}</div></div>
+            <ReservationLocations branches={branches} branchId={draft.branchId} chooseBranch={chooseBranch}/>
           ) : null}
           {draft.step === 2 ? (
             <div><span className="wl-kicker">Step 2</span><h2>When are you joining us?</h2><div className="wl-field-grid"><label>Party size<select value={draft.partySize} onChange={(event) => updateDiningDetails({ partySize: Number(event.target.value) })}>{partySizes.map((size) => <option key={size} value={size}>{size} {size === 1 ? "guest" : "guests"}</option>)}</select></label><label>Date<input type="date" min={branchLocalDate(branch.timezone)} max={addDays(branchLocalDate(branch.timezone), 90)} value={draft.reservationDate} onChange={(event) => updateDiningDetails({ reservationDate: event.target.value })} /></label><label>Duration<select value={draft.durationMinutes} onChange={(event) => updateDiningDetails({ durationMinutes: Number(event.target.value) })}>{durations.map((duration) => <option value={duration} key={duration}>{duration < 60 ? `${duration} min` : `${Math.floor(duration / 60)}h${duration % 60 ? ` ${duration % 60}m` : ""}`}</option>)}</select></label></div><div className="wl-time-heading"><h3>Available times</h3>{loading ? <span>Checking…</span> : null}</div><div className="wl-time-grid">{times.map((time) => <button className={draft.reservationTimeLocal === time ? "is-selected" : ""} type="button" key={time} onClick={() => setDraft((current) => ({ ...current, reservationTimeLocal: time, floorId: "", seatingOption: null }))}>{formatTime(time)}</button>)}</div>{!loading && times.length === 0 ? <p className="wl-empty">No tables match these details. Try another date or duration.</p> : null}</div>
@@ -199,10 +198,9 @@ export default function ReservePage() {
             <div><span className="wl-kicker">Step 4</span><h2>Review your reservation</h2><div className="wl-review-card"><div><span>Location</span><strong>{branchShortName(branch)}</strong></div><div><span>Date &amp; time</span><strong>{formatDate(draft.reservationDate, branch.timezone)} · {formatTime(draft.reservationTimeLocal)}</strong></div><div><span>Party</span><strong>{draft.partySize} guests · {draft.durationMinutes} min</strong></div><div><span>Table</span><strong>{draft.seatingOption?.name} · {floors.find((floor) => floor.id === draft.floorId)?.name}</strong></div></div><label className="wl-request-field">Special requests <span>Optional</span><textarea disabled={Boolean(reservation)} maxLength={500} value={draft.specialRequest} onChange={(event) => setDraft((current) => ({ ...current, specialRequest: event.target.value }))} placeholder="Allergies, celebrations, accessibility or seating needs…" /></label><div className="wl-policy-confirm"><strong>{formatMoney(policy?.depositAmount || 0, policy?.depositCurrency || tenant.currency)} deposit due now</strong><p>Free cancellation up to {policy?.freeCancelWindowHours ?? 0} hours before your booking. Tables are held for {policy?.gracePeriodMinutes ?? 0} minutes after the reservation time.</p></div>{requiresPayment ? <PaymentMethodSelector value={draft.paymentMethod ?? null} disabled={Boolean(reservation)} onChange={(paymentMethod: PaymentMethod) => setDraft((current) => ({ ...current, paymentMethod }))} /> : null}{!isAuthenticated ? <p className="wl-auth-note">You’ll sign in or create an account next. Your choices are saved.</p> : null}</div>
           ) : null}
           <div className="wl-booking-actions">{draft.step > 1 && !reservation ? <button className="wl-button wl-button-ghost" type="button" onClick={() => setDraft((current) => ({ ...current, step: current.step - 1 }))}>Back</button> : <span />}{draft.step < 4 ? <button className="wl-button" type="button" disabled={loading || (draft.step === 1 && !draft.branchId) || (draft.step === 2 && !draft.reservationTimeLocal) || (draft.step === 3 && !draft.seatingOption)} onClick={() => setDraft((current) => ({ ...current, step: current.step + 1 }))}>Continue</button> : <button className="wl-button" type="button" disabled={loading || !draft.seatingOption || (requiresPayment && !draft.paymentMethod && !(payment && reservation))} onClick={() => payment && reservation ? setPaymentOpen(true) : void submitReservation()}>{loading ? "Securing table…" : payment && reservation ? "Resume secure payment" : isAuthenticated ? draft.paymentMethod === "APPLE_PAY" ? "Continue with Apple Pay" : "Pay deposit & confirm" : "Sign in to confirm"}</button>}</div>
-        </section>
-        <aside className="wl-booking-summary"><span className="wl-kicker">Your reservation</span><img src={branch.coverImageUrl || branch.photos[0]?.url} alt="" /><h2>{branchShortName(branch)}</h2><p>{branch.addressSummary}</p><dl><div><dt>Date</dt><dd>{formatDate(draft.reservationDate, branch.timezone)}</dd></div><div><dt>Time</dt><dd>{draft.reservationTimeLocal ? formatTime(draft.reservationTimeLocal) : "Choose a time"}</dd></div><div><dt>Guests</dt><dd>{draft.partySize}</dd></div><div><dt>Table</dt><dd>{draft.seatingOption?.name || "Choose a table"}</dd></div></dl>{reservation ? <div className="wl-hold-timer"><HoldCountdown expiresAt={reservation.holdExpiresAt} /></div> : null}</aside>
-      </div>
+</ReservationFrame>
+
       {paymentOpen && payment && reservation ? <PaymentModal paymentId={payment.paymentId} checkoutUrl={payment.checkoutUrl} reservation={reservation} onSuccess={finishReservation} onClose={() => setPaymentOpen(false)} /> : null}
-    </div>
+    </>
   );
 }

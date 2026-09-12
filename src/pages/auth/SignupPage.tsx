@@ -8,14 +8,18 @@ import AuthCardHeader from "../../components/auth/AuthCardHeader";
 import ErrorMessage from "../../components/ErrorMessage";
 import Loader from "../../components/Loader";
 import SuccessMessage from "../../components/SuccessMessage";
+import useTenant from "../../hooks/useTenant";
+import useTenantPath from "../../hooks/useTenantPath";
 import { safeReturnPath } from "../../white-label/tenant";
 
 export default function SignupPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { tenantSlug } = useTenant();
+  const tenantPath = useTenantPath();
 
   const searchParams = new URLSearchParams(location.search);
-  const returnTo = safeReturnPath(searchParams.get("returnTo"));
+  const returnTo = safeReturnPath(searchParams.get("returnTo"), tenantSlug);
   const invitationTokenFromUrl =
     searchParams.get("invitationToken") ||
     searchParams.get("token") ||
@@ -72,7 +76,7 @@ export default function SignupPage() {
       await authService.signupStart(signupPayload);
 
       setSuccess("OTP sent successfully.");
-      navigate("/auth/verify", {
+      navigate(tenantPath("auth/verify"), {
         state: {
           mode: "signup",
           mobile: signupPayload.mobile,
@@ -148,7 +152,7 @@ export default function SignupPage() {
 
         <div className="auth-footer">
           <span>Already have an account?</span>
-          <Link to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Login</Link>
+          <Link to={`${tenantPath("auth/login")}?returnTo=${encodeURIComponent(returnTo)}`}>Login</Link>
         </div>
       </div>
     </div>

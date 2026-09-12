@@ -1,3 +1,4 @@
+import { assertLiveRequest } from "../website/mode";
 import axios, {
   type AxiosInstance,
   AxiosHeaders,
@@ -41,6 +42,7 @@ let refreshTokensPromise: Promise<string | null> | null = null;
 
 function attachLoadingInterceptors(client: AxiosInstance) {
   client.interceptors.request.use((config) => {
+    assertLiveRequest();
     if (!config.skipGlobalLoading) {
       loadingService.setLoading(true);
     }
@@ -173,6 +175,7 @@ attachLoadingInterceptors(api);
 attachLoadingInterceptors(refreshApi);
 
 api.interceptors.request.use((config) => {
+  assertLiveRequest();
   const requestConfig = config as RetryableRequestConfig;
   applyAuthorizationHeader(requestConfig, getAccessToken());
   applyContentTypeHeader(requestConfig);

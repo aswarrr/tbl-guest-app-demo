@@ -24,9 +24,6 @@ type SetSessionPayload = {
   user?: SessionUser | null;
 };
 
-const GUEST_APP_ACCESS_ERROR =
-  "This user is not a guest. Super admins and managers must use the admin app.";
-
 function decodeTokenUser(token: string | null): SessionUser | null {
   if (!token) return null;
 
@@ -70,29 +67,6 @@ function normalizeApiUser(result: unknown): SessionUser | null {
   };
 }
 
-function hasGuestAppAccess(user: SessionUser | null) {
-  if (!user) return false;
-
-  if (user.isSuperAdmin) {
-    return false;
-  }
-
-  if (Array.isArray(user.companyRoles) && user.companyRoles.length > 0) {
-    return false;
-  }
-
-  if (Array.isArray(user.branchRoles) && user.branchRoles.length > 0) {
-    return false;
-  }
-
-  return true;
-}
-
-function rejectGuestAppAccess() {
-  clearTokens();
-  return new Error(GUEST_APP_ACCESS_ERROR);
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
 
@@ -106,9 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
 
   const bootstrapSession = useCallback(
-    async (options?: { silent?: boolean; throwOnUnauthorized?: boolean }) => {
+    async (options?: { silent?: boolean }) => {
     const silent = !!options?.silent;
-    const throwOnUnauthorized = !!options?.throwOnUnauthorized;
 
     let currentAccessToken = getAccessToken();
     const currentRefreshToken = getRefreshToken();
@@ -138,8 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    let unauthorizedError: Error | null = null;
-
     try {
       const meFn = authService.me;
       let nextUser: SessionUser | null = null;
@@ -157,33 +128,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nextUser = decodeTokenUser(getAccessToken() ?? currentAccessToken);
       }
 
-      if (nextUser && !hasGuestAppAccess(nextUser)) {
-        unauthorizedError = rejectGuestAppAccess();
-        setUser(null);
-      } else {
-        setUser(nextUser);
-      }
+      setUser(nextUser);
     } catch {
       const latestAccessToken = getAccessToken();
       const fallbackUser = latestAccessToken
         ? decodeTokenUser(latestAccessToken)
         : null;
 
-      if (fallbackUser && !hasGuestAppAccess(fallbackUser)) {
-        unauthorizedError = rejectGuestAppAccess();
-        setUser(null);
-      } else {
-        setUser(fallbackUser);
-      }
+      setUser(fallbackUser);
     } finally {
       setAccessTokenState(getAccessToken());
       setRefreshTokenState(getRefreshToken());
       setIsBootstrapping(false);
     }
-
-      if (unauthorizedError && throwOnUnauthorized) {
-        throw unauthorizedError;
-      }
     },
     []
   );
@@ -196,19 +153,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRefreshTokenState(getRefreshToken());
 
       if (user !== undefined) {
-        if (user && !hasGuestAppAccess(user)) {
-          throw rejectGuestAppAccess();
-        }
-
         setUser(user);
         setIsBootstrapping(false);
         return;
       }
 
-      await bootstrapSession({
-        silent: true,
-        throwOnUnauthorized: true,
-      });
+      await bootstrapSession({ silent: true });
     },
     [bootstrapSession]
   );
@@ -253,7 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const safeAccessToken = accessToken ?? getAccessToken();
   const safeRefreshToken = refreshToken ?? getRefreshToken();
-  const isAuthenticated = !!safeAccessToken && hasGuestAppAccess(user);
+  const isAuthenticated = !!safeAccessToken;
 
   const value = useMemo<AuthContextType>(
     () => ({

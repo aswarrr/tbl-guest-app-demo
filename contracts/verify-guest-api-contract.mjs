@@ -82,6 +82,55 @@ assert.match(
   "Opening-hours mutation routes are no longer protected by mandatory authentication."
 );
 
+// The white-label guest site is unauthenticated: every read it performs to
+// render a restaurant must stay public, and branch filtering must stay on the
+// server rather than the browser paging the whole catalog.
+const catalogRoutes = readFileSync(
+  resolve(apiRoot, "src/modules/mobile/mobile-catalog.routes.js"),
+  "utf8"
+);
+
+for (const [pattern, message] of [
+  [
+    /router\.get\(\s*["']\/tenants["'],(?![^)]*requireAuth)/s,
+    "The restaurant directory is no longer publicly readable.",
+  ],
+  [
+    /router\.get\(\s*["']\/tenants\/:companySlug\/menu["'],(?![^)]*requireAuth)/s,
+    "The published tenant menu is no longer publicly readable.",
+  ],
+  [
+    /router\.get\(\s*["']\/branches\/:branchId\/menu["'],(?![^)]*requireAuth)/s,
+    "The published branch menu is no longer publicly readable.",
+  ],
+]) {
+  assert.match(catalogRoutes, pattern, message);
+}
+
+const companiesRoutes = readFileSync(
+  resolve(apiRoot, "src/modules/companies/companies.routes.js"),
+  "utf8"
+);
+assert.match(
+  companiesRoutes,
+  /companiesRoutes\.get\(\s*["']\/slug\/:slug["'],\s*optionalAuth,/s,
+  "Restaurant branding by slug is no longer readable without authentication."
+);
+
+const { branchQuerySchema } = require(
+  resolve(apiRoot, "src/modules/mobile/mobile.schema.js")
+);
+assert.equal(
+  branchQuerySchema.safeParse({ companySlug: "sizzler-steak-house-and-co" }).success,
+  true,
+  "The catalog no longer accepts a companySlug filter, so the guest site would page the whole platform."
+);
+assert.equal(
+  branchQuerySchema.parse({ companySlug: "Sizzler-Steak-House-And-Co" }).companySlug,
+  "sizzler-steak-house-and-co",
+  "The catalog no longer normalises companySlug casing."
+);
+
 console.log(
-  "Guest/API contract passed: opening hours, local holds, legacy holds, and cancellation metadata."
+  "Guest/API contract passed: opening hours, local holds, legacy holds, cancellation metadata, and public tenant reads."
 );

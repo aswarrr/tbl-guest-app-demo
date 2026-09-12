@@ -1,3 +1,5 @@
+import { previewMode } from "./website/mode";
+import PreviewApp from "./website/PreviewApp";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -13,13 +15,17 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <ToastProvider>
-        <AuthProvider>
-          <>
-            <App />
-            <GlobalLoader />
-          </>
-        </AuthProvider>
+        {previewMode ? (
+          <PreviewApp />
+        ) : (
+          <AuthProvider>
+            <>
+              <App />
+              <GlobalLoader />
+            </>
+          </AuthProvider>
+        )}
       </ToastProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

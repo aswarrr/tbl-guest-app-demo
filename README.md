@@ -37,18 +37,27 @@ npm run build
 
 ## White-label tenant routing
 
-The customer site resolves the restaurant from a Shopify-style subdomain and filters
-published mobile-API branches by `companySlug`.
+Each restaurant is served from its own path segment:
+
+```text
+https://tbl-guest-app.vercel.app/sizzler-steak-house-and-co
+```
+
+The slug is read from the route (`/:companySlug`) and everything on the page
+comes from the API: branding from `GET /api/companies/slug/:slug`, locations
+from `GET /api/mobile/branches?companySlug=...`, and the published menu from
+`GET /api/mobile/tenants/:companySlug/menu`. All three are public reads.
+
+The host root lists the restaurants that have a published site. A restaurant
+with no published menu simply has no Menu link.
+
+Subdomain resolution still works as a fallback, so a custom domain can be
+pointed at this build later without a rewrite:
 
 ```env
 VITE_TENANT_ROOT_DOMAIN=restaurants.example.com
-VITE_DEFAULT_TENANT_SLUG=sizzler-steak-house-and-co
 ```
 
-Attach `*.restaurants.example.com` to the Vercel project and create the matching
-wildcard DNS record. Local and preview builds use `VITE_DEFAULT_TENANT_SLUG`; the
-optional `?tenant=` query parameter can override it for testing.
-
-Restaurant branding and unsupported static content live in `src/white-label/config.ts`.
-The Sizzler menu is explicitly sample content; restaurant, location, schedule, policy,
-availability, hold, and payment data continue to come from existing API endpoints.
+Every restaurant shares one brand-neutral palette; identity comes from the
+restaurant's own logo and photography. Nothing in the database stores a
+per-restaurant palette yet.

@@ -5,6 +5,8 @@ import AuthCardHeader from "../../components/auth/AuthCardHeader";
 import ErrorMessage from "../../components/ErrorMessage";
 import Loader from "../../components/Loader";
 import useAuth from "../../hooks/useAuth";
+import useTenant from "../../hooks/useTenant";
+import useTenantPath from "../../hooks/useTenantPath";
 import { safeReturnPath } from "../../white-label/tenant";
 
 type Tab = "email" | "mobilePassword" | "mobileOtp";
@@ -40,7 +42,9 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setSession } = useAuth();
-  const returnTo = safeReturnPath(searchParams.get("returnTo"));
+  const { tenantSlug } = useTenant();
+  const tenantPath = useTenantPath();
+  const returnTo = safeReturnPath(searchParams.get("returnTo"), tenantSlug);
 
   const [tab, setTab] = useState<Tab>("mobileOtp");
   const [loading, setLoading] = useState(false);
@@ -113,7 +117,7 @@ export default function LoginPage() {
     try {
       await authService.requestMobileOtp(mobileOtpForm);
 
-      navigate("/auth/verify", {
+      navigate(tenantPath("auth/verify"), {
         state: {
           mode: "loginMobileOtp",
           mobile: mobileOtpForm.mobile,
@@ -234,7 +238,7 @@ export default function LoginPage() {
 
         <div className="auth-footer">
           <span>Don&apos;t have an account?</span>
-          <Link to={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}>Sign up</Link>
+          <Link to={`${tenantPath("auth/signup")}?returnTo=${encodeURIComponent(returnTo)}`}>Sign up</Link>
         </div>
       </div>
     </div>

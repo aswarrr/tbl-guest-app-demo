@@ -2,9 +2,12 @@ import { api } from "../services/api";
 import type {
   AvailableFloor,
   CustomerReservation,
+  GuestMenu,
   PaymentStatus,
   RestaurantBranchCard,
   RestaurantBranchDetail,
+  TenantCompany,
+  TenantSummary,
 } from "./types";
 
 type Envelope<T> = { ok?: boolean; data?: T; error?: { message?: string } };
@@ -19,18 +22,36 @@ function unwrap<T>(payload: Envelope<T> | T): T {
 }
 
 export const customerService = {
+  /** Restaurants with a public site, for the host's directory page. */
+  async listTenants() {
+    const response = await api.get("/api/mobile/tenants", { skipGlobalLoading: true });
+    return unwrap<TenantSummary[]>(response.data);
+  },
+
+  /** Branding for one restaurant. Public for active companies. */
+  async getCompany(companySlug: string) {
+    const response = await api.get(`/api/companies/slug/${encodeURIComponent(companySlug)}`, {
+      skipGlobalLoading: true,
+    });
+    return unwrap<TenantCompany>(response.data);
+  },
+
+  /** This restaurant's branches. Filtered server-side, so it is one request. */
   async listTenantBranches(companySlug: string) {
-    const branches: RestaurantBranchCard[] = [];
-    const limit = 100;
+    const response = await api.get("/api/mobile/branches", {
+      params: { companySlug, limit: 100 },
+      skipGlobalLoading: true,
+    });
+    return unwrap<RestaurantBranchCard[]>(response.data);
+  },
 
-    for (let offset = 0; offset < 1000; offset += limit) {
-      const response = await api.get("/api/mobile/branches", { params: { limit, offset }, skipGlobalLoading: true });
-      const page = unwrap<RestaurantBranchCard[]>(response.data);
-      branches.push(...page.filter((branch) => branch.companySlug === companySlug));
-      if (page.length < limit) break;
-    }
-
-    return branches;
+  /** The published menu, or null when the restaurant has not published one. */
+  async getTenantMenu(companySlug: string) {
+    const response = await api.get(
+      `/api/mobile/tenants/${encodeURIComponent(companySlug)}/menu`,
+      { skipGlobalLoading: true },
+    );
+    return unwrap<GuestMenu | null>(response.data);
   },
 
   async getBranch(branchId: string) {

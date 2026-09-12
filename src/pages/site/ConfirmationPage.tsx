@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import useTenant from "../../hooks/useTenant";
+import useTenantPath from "../../hooks/useTenantPath";
 import { customerService } from "../../white-label/customer.service";
 import { formatDate, formatMoney, formatTime } from "../../white-label/format";
 import type { CustomerReservation } from "../../white-label/types";
@@ -22,6 +23,7 @@ export default function ConfirmationPage() {
   const { reservationId = "" } = useParams();
   const location = useLocation();
   const { tenant } = useTenant();
+  const tenantPath = useTenantPath();
   const stateReservation = (location.state as { reservation?: CustomerReservation } | null)?.reservation;
   const [reservation, setReservation] = useState<CustomerReservation | null>(() => {
     if (stateReservation) return stateReservation;
@@ -64,9 +66,9 @@ export default function ConfirmationPage() {
         </div>
       </section>
       <div className="wl-actions wl-confirmation-actions">
-        {calendarHref ? <a className="wl-button" href={calendarHref} download={`${tenant.shortName}-reservation.ics`}>Add to calendar</a> : null}
+        {calendarHref ? <a className="wl-button" href={calendarHref} download={`${tenant.name}-reservation.ics`}>Add to calendar</a> : null}
         {directions ? <a className="wl-button wl-button-outline" href={directions} target="_blank" rel="noreferrer">Get directions</a> : null}
-        <Link className="wl-text-link" to="/">Back to home</Link>
+        <Link className="wl-text-link" to={tenantPath()}>Back to home</Link>
       </div>
     </div>
   );

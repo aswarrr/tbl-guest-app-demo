@@ -23,6 +23,24 @@ describe("white-label tenant utilities", () => {
   });
   afterEach(() => sessionStorage.clear());
 
+  it("prefers the restaurant named in the path", () => {
+    expect(resolveTenantSlug({
+      pathSlug: "farida-steakhouse",
+      hostname: "sizzler.restaurants.example.com",
+      search: "?tenant=someone-else",
+      rootDomain: "restaurants.example.com",
+      defaultSlug: "fallback",
+    })).toBe("farida-steakhouse");
+  });
+
+  it("lowercases a path slug", () => {
+    expect(resolveTenantSlug({ pathSlug: "Farida-Steakhouse" })).toBe("farida-steakhouse");
+  });
+
+  it("names no restaurant when the address carries none", () => {
+    expect(resolveTenantSlug({ hostname: "tbl-guest-app.vercel.app", search: "" })).toBe("");
+  });
+
   it("resolves a Shopify-style restaurant subdomain", () => {
     expect(resolveTenantSlug({
       hostname: "sizzler-steak-house-and-co.restaurants.example.com",
@@ -62,8 +80,21 @@ describe("white-label tenant utilities", () => {
   });
 
   it("rejects external auth return URLs", () => {
-    expect(safeReturnPath("https://example.com")).toBe("/reserve");
-    expect(safeReturnPath("//example.com")).toBe("/reserve");
-    expect(safeReturnPath("/reserve?resume=review")).toBe("/reserve?resume=review");
+    expect(safeReturnPath("https://example.com", "sizzler")).toBe("/sizzler/reserve");
+    expect(safeReturnPath("//example.com", "sizzler")).toBe("/sizzler/reserve");
+    expect(safeReturnPath(null, "sizzler")).toBe("/sizzler/reserve");
+  });
+
+  it("keeps a return path inside the restaurant the guest is on", () => {
+    expect(safeReturnPath("/sizzler/reserve?resume=review", "sizzler")).toBe(
+      "/sizzler/reserve?resume=review",
+    );
+    expect(safeReturnPath("/sizzler", "sizzler")).toBe("/sizzler");
+  });
+
+  it("refuses a return path belonging to another restaurant", () => {
+    expect(safeReturnPath("/other-restaurant/reserve", "sizzler")).toBe("/sizzler/reserve");
+    // A prefix match alone must not be enough.
+    expect(safeReturnPath("/sizzler-evil/reserve", "sizzler")).toBe("/sizzler/reserve");
   });
 });

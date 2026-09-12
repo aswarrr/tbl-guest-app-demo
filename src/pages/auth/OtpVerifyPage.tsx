@@ -10,6 +10,8 @@ import Loader from "../../components/Loader";
 import SuccessMessage from "../../components/SuccessMessage";
 import WarningMessage from "../../components/WarningMessage";
 import useAuth from "../../hooks/useAuth";
+import useTenant from "../../hooks/useTenant";
+import useTenantPath from "../../hooks/useTenantPath";
 import { safeReturnPath } from "../../white-label/tenant";
 
 const RESEND_DELAY_SECONDS = 10;
@@ -52,12 +54,14 @@ export default function OtpVerifyPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setSession } = useAuth();
+  const { tenantSlug } = useTenant();
+  const tenantPath = useTenantPath();
   const locationState = (location.state ?? {}) as OtpVerifyLocationState;
 
   const mode = locationState.mode;
   const initialMobile = locationState.mobile || "";
   const signupPayload = locationState.signupPayload;
-  const returnTo = safeReturnPath(locationState.returnTo || null);
+  const returnTo = safeReturnPath(locationState.returnTo || null, tenantSlug);
   const showResendSection = mode === "signup" || mode === "loginMobileOtp";
   const canResendFromState =
     mode === "loginMobileOtp" || (mode === "signup" && Boolean(signupPayload));
@@ -218,7 +222,7 @@ export default function OtpVerifyPage() {
         )}
 
         <div className="auth-footer">
-          <Link to={`/auth/login?returnTo=${encodeURIComponent(returnTo)}`}>Back to Login</Link>
+          <Link to={`${tenantPath("auth/login")}?returnTo=${encodeURIComponent(returnTo)}`}>Back to Login</Link>
         </div>
       </div>
     </div>

@@ -1,30 +1,48 @@
-export type MenuItem = {
+/** A restaurant, as the public company endpoint returns it. */
+export type TenantCompany = {
+  id: string;
   name: string;
-  description: string;
-  price: number;
-  tags?: string[];
+  slug: string;
+  about: string | null;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  currency: string;
 };
 
-export type MenuSection = {
+/** One row of the directory shown at the host root. */
+export type TenantSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  cuisineName: string | null;
+};
+
+/**
+ * The published menu. The server strips hidden sections and internal ids, so
+ * items are keyed by their section anchor and position.
+ */
+export type GuestMenu = {
+  currency: string;
+  updatedAt: string | null;
+  sections: GuestMenuSection[];
+};
+
+export type GuestMenuSection = {
   name: string;
   eyebrow: string;
-  items: MenuItem[];
+  anchor: string;
+  items: GuestMenuItem[];
 };
 
-export type TenantConfig = {
-  slug: string;
-  displayName: string;
-  shortName: string;
-  tagline: string;
-  cuisineLabel: string;
-  currency: string;
-  theme: {
-    accent: string;
-    accentDark: string;
-    ink: string;
-    paper: string;
-  };
-  menu: MenuSection[];
+export type GuestMenuItem = {
+  name: string;
+  description: string;
+  price: number | null;
+  tags: string[];
+  available: boolean;
+  imageUrl: string | null;
 };
 
 export type RestaurantPolicy = {
@@ -67,6 +85,8 @@ export type RestaurantBranchCard = {
   name: string;
   companyName: string | null;
   companySlug: string | null;
+  companyLogoUrl: string | null;
+  currency: string;
   cuisineName: string | null;
   coverImageUrl: string | null;
   addressSummary: string;
