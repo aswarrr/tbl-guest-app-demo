@@ -27,6 +27,7 @@ export type HomeSection = keyof typeof sectionNames;
 export const sectionIds = [
   "brand",
   "theme",
+  "features",
   "header",
   "footer",
   "about",
@@ -201,6 +202,16 @@ export const schema = object("Website", {
     ]),
     logoSize: num("Logo size", 48, 24, 96),
   }),
+  /**
+   * What the site can do, as opposed to what it shows. A hidden navigation
+   * link still leaves its page reachable; switching a capability off removes
+   * the page, its routes and every button that points at it.
+   */
+  features: object("Features", {
+    menu: bool("Menu page", true),
+    reservations: bool("Online reservations", true),
+    tableSelection: bool("Let guests choose their table", true),
+  }),
   theme: object("Design", {
     primaryColor: color("Primary brand color", "#1d3557"),
     accentDark: color("Dark accent", "#12233b"),
@@ -338,7 +349,7 @@ export const schema = object("Website", {
     instagram: { ...text("Instagram URL"), url: true },
     facebook: { ...text("Facebook URL"), url: true },
     tiktok: { ...text("TikTok URL"), url: true },
-    attribution: bool("Powered by The TBL"),
+    attribution: bool("Powered by Tavlo"),
   }),
 });
 
@@ -360,30 +371,176 @@ export function defaultsFor(node: Node): unknown {
   if (node.kind === "media" || node.kind === "branch") return null;
   return node.value;
 }
-export function createDefaults(company: {
+/**
+ * Bring a stored configuration up to the current schema by filling in fields
+ * added since it was written.
+ *
+ * This is how the schema grows. validateConfig requires every schema field to
+ * be present, so adding one to `schema` would otherwise invalidate every
+ * configuration already in the database — and an invalid published config is
+ * dropped by the guest app, taking the restaurant's whole design with it.
+ *
+ * Strictly additive: it only ever supplies values that are absent. An existing
+ * value is never overwritten or repaired, and unknown keys are left in place,
+ * so validateConfig still rejects a malformed configuration rather than having
+ * the damage papered over. Idempotent, so it is safe to run on every read.
+ */
+export function normalizeConfig(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const fill = (node: Node, data: unknown): unknown => {
+    if (node.kind === "object") {
+      // Present but not an object means corrupt, not old: leave it for
+      // validateConfig to report.
+      if (data !== undefined && !isRecord(data)) return data;
+      const source = isRecord(data) ? data : {};
+      const filled: Record<string, unknown> = { ...source };
+      for (const [key, child] of Object.entries(node.fields))
+        filled[key] = Object.hasOwn(source, key)
+          ? fill(child, source[key])
+          : defaultsFor(child);
+      return filled;
+    }
+    if (node.kind === "array") {
+      // A present-but-wrong-length array is corruption, not an older schema, so
+      // it is passed through for validateConfig to reject. Filling it here would
+      // hide the bug that produced it.
+      if (data === undefined) return defaultsFor(node);
+      if (!Array.isArray(data)) return data;
+      return data.map((item) => fill(node.item, item));
+    }
+    return data === undefined ? defaultsFor(node) : data;
+  };
+  // `version` and `homeOrder` sit outside the node schema, so they are carried
+  // across untouched rather than walked. Key order is preserved so normalizing
+  // an already-current config reproduces it byte for byte.
+  const { homeOrder, version, ...rest } = value;
+  const filled = fill(schema, { ...rest, version: "1" }) as Record<
+    string,
+    unknown
+  >;
+  filled.version = version;
+  filled.homeOrder = homeOrder;
+  const ordered: Record<string, unknown> = {};
+  for (const key of Object.keys(value)) ordered[key] = filled[key];
+  for (const [key, entry] of Object.entries(filled))
+    if (!Object.hasOwn(ordered, key)) ordered[key] = entry;
+  return ordered;
+}
+
+/**
+ * One branch's images, most representative first. `coverUrl` is the branch's
+ * main image; `photos` are its gallery, already in display order.
+ */
+export type SeedBranch = {
   id: string;
-  name: string;
-  logoUrl?: string | null;
   coverUrl?: string | null;
-  about?: string | null;
-}): WebsiteConfigV1 {
+  photos?: Array<{ id: string; url?: string | null }>;
+};
+
+/**
+ * Build the pool a new draft draws its images from, ordered by how
+ * representative each image is:
+ *   1. the restaurant's own cover
+ *   2. every branch's main image
+ *   3. every branch's remaining photos, interleaved across branches so a
+ *      restaurant with several locations does not seed six photos of one.
+ * Ordering is deterministic, so resetting a draft reproduces the same site.
+ */
+export function seedAssets(
+  companyId: string,
+  coverUrl: string | null | undefined,
+  branches: SeedBranch[] = [],
+): MediaRef[] {
+  const pool: MediaRef[] = [];
+  if (coverUrl) pool.push({ kind: "company-cover", companyId });
+  for (const branch of branches)
+    if (branch.coverUrl)
+      pool.push({ kind: "branch-cover", companyId, branchId: branch.id });
+  const remaining = branches.map((b) =>
+    (b.photos || []).filter((p) => p && p.id && p.url),
+  );
+  for (let round = 0; remaining.some((list) => round < list.length); round++)
+    for (const [index, list] of remaining.entries())
+      if (round < list.length)
+        pool.push({
+          kind: "branch-photo",
+          companyId,
+          branchId: branches[index].id,
+          photoId: list[round].id,
+        });
+  return pool;
+}
+
+export function createDefaults(
+  company: {
+    id: string;
+    name: string;
+    logoUrl?: string | null;
+    coverUrl?: string | null;
+    about?: string | null;
+  },
+  branches: SeedBranch[] = [],
+): WebsiteConfigV1 {
   const config = defaultsFor(schema) as ConfigShape;
+  // A new draft must be an exact replica of the hand-coded guest site, so the
+  // copy the original pages hardcode is seeded here rather than left blank.
+  // Blank fields would render as empty elements and read as layout bugs.
   config.brand.shortName = company.name;
+  // hero/about eyebrows are left blank on purpose: the original pages show the
+  // primary branch's cuisine there, which the renderer fills in as a fallback
+  // because it is connected data, not authored copy.
   config.pages.home.hero.heading = company.name;
   config.pages.home.hero.description =
-    company.about || "A place to gather, share and enjoy.";
-  config.pages.home.story.heading = "Our story";
-  config.pages.home.locations.heading = "Our locations";
+    "Choose your location, your time, and the table that feels right.";
+  config.pages.home.story.eyebrow = "Our story";
+  config.pages.home.story.heading = `About ${company.name}.`;
+  config.pages.home.story.description = company.about || "";
+  config.pages.home.locations.eyebrow = "Our locations";
+  config.pages.home.locations.heading = "One warm welcome.";
+  // The original home card is deliberately sparse — open status, cuisine, name
+  // and address. The full detail (hours, contacts, policies) belongs to the
+  // Locations page, whose display toggles stay on.
+  Object.assign(config.pages.home.locations.display, {
+    hours: false,
+    phone: false,
+    email: false,
+    amenities: false,
+    policies: false,
+  });
+  config.pages.home.gallery.eyebrow = "Around the table";
   config.pages.home.gallery.heading = "Around the table";
-  config.pages.home.cta.heading = "Your table is waiting.";
-  config.pages.about.heading = `About ${company.name}`;
-  if (company.coverUrl)
-    config.pages.home.hero.image = {
-      kind: "company-cover",
-      companyId: company.id,
-    };
+  config.pages.home.cta.eyebrow = "Your table is waiting";
+  config.pages.home.cta.heading = "Make tonight one to remember.";
+  config.pages.home.cta.description =
+    "Live availability, your choice of location, and a table selected by you.";
+  config.pages.about.heading = `About ${company.name}.`;
+  config.pages.about.storyTitle = "A place at the heart of the table.";
+  config.pages.locations.heading = "Find your table.";
+  config.pages.locations.description = `Choose the ${company.name} location that fits your plans.`;
+  config.pages.policies.heading = "Reservation policies.";
+  config.pages.policies.introduction =
+    "Clear details, so the only surprise is how good dinner is.";
   if (company.logoUrl)
     config.brand.logo = { kind: "company-logo", companyId: company.id };
+
+  // Fill every image slot from the restaurant's own library so a first draft
+  // has no empty placeholders. `next` walks the pool, only repeating an image
+  // once every distinct one has been used.
+  const pool = seedAssets(company.id, company.coverUrl, branches);
+  let cursor = 0;
+  const next = (): MediaRef | null =>
+    pool.length ? pool[cursor++ % pool.length] : null;
+  config.pages.home.hero.image = next();
+  config.pages.home.cta.image = next();
+  // The closing CTA only shows its image in the "image" background mode; brand
+  // colour is the fallback when there is nothing to show.
+  if (config.pages.home.cta.image) config.pages.home.cta.background = "image";
+  config.pages.home.story.image = next();
+  config.pages.about.image = next();
+  config.pages.reserve.image = next();
+  config.pages.home.gallery.images = config.pages.home.gallery.images.map(
+    () => next(),
+  );
   return {
     ...config,
     version: 1,
@@ -432,6 +589,10 @@ export function safeUrl(value: string): boolean {
 }
 export function validateConfig(value: unknown, companyId: string): string[] {
   const errors: string[] = [];
+  // Locked toggles exist to guarantee a bookable site. When reservations are
+  // switched off the site is not bookable by definition, so those particular
+  // locks release rather than making the configuration impossible to express.
+  const reservationsOn = getAt(value, "features.reservations") !== false;
   function visit(node: Node, data: unknown, path: string) {
     const fail = () =>
       errors.push(`${path}: invalid ${node.label.toLowerCase()}`);
@@ -485,7 +646,8 @@ export function validateConfig(value: unknown, companyId: string): string[] {
     } else if (node.kind === "enum") {
       if (!node.options.includes(data as string)) fail();
     } else if (node.kind === "boolean") {
-      if (typeof data !== "boolean" || (node.locked && data !== true)) fail();
+      if (typeof data !== "boolean") return fail();
+      if (node.locked && data !== true && reservationsOn) fail();
     } else if (node.kind === "number") {
       if (
         typeof data !== "number" ||
@@ -518,8 +680,32 @@ export function validateConfig(value: unknown, companyId: string): string[] {
     )
   )
     errors.push("Homepage sections must each appear exactly once.");
-  if (getAt(value, "pages.home.cta.action.destination") !== "reserve")
+  if (
+    reservationsOn &&
+    getAt(value, "pages.home.cta.action.destination") !== "reserve"
+  )
     errors.push("The reservation CTA must link to Reservations.");
+  // A capability that is off must not leave links pointing at it: StudioSite
+  // reads these visibility flags directly, so an incoherent configuration would
+  // render a link to a route that redirects away. The Website Builder keeps
+  // these in step automatically when a capability is toggled.
+  if (!reservationsOn) {
+    for (const path of [
+      "header.navigation.reserve.visible",
+      "pages.home.cta.visible",
+    ])
+      if (getAt(value, path) !== false)
+        errors.push(
+          "Turn off the reservation links when online reservations are off.",
+        );
+    if (getAt(value, "features.tableSelection") !== false)
+      errors.push("Table selection requires online reservations.");
+  }
+  if (
+    getAt(value, "features.menu") === false &&
+    getAt(value, "header.navigation.menu.visible") !== false
+  )
+    errors.push("Turn off the menu link when the menu page is off.");
   for (const path of [
     "header.reservationLabel",
     ...Object.keys(pages).map((key) => `header.navigation.${key}.label`),

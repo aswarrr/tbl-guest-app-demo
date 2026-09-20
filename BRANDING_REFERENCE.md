@@ -1,6 +1,6 @@
-# TBL Prototype Branding Reference
+# Tavlo Branding Reference
 
-This file summarizes the typography and button colors currently used in `tbl-prototype`.
+This file summarizes the typography and button colors currently used in `tavlo`.
 
 Source of truth used for this document:
 
@@ -63,11 +63,11 @@ This is separate from the main app shell and still uses its own font system.
 
 | Token | Value |
 | --- | --- |
-| `--tbl-navy` | `#112349` |
-| `--tbl-navy-deep` | `#09142d` |
-| `--tbl-royal` | `#1d376f` |
-| `--tbl-paper` | `#f7f2e8` |
-| `--tbl-paper-strong` | `#fffaf1` |
+| `--tavlo-navy` | `#112349` |
+| `--tavlo-navy-deep` | `#09142d` |
+| `--tavlo-royal` | `#1d376f` |
+| `--tavlo-paper` | `#f7f2e8` |
+| `--tavlo-paper-strong` | `#fffaf1` |
 | `--red` | `#e53935` |
 | `--positive` | `#60bd68` |
 | `--warning` | `#f89406` |
@@ -96,7 +96,7 @@ This is separate from the main app shell and still uses its own font system.
 
 ### Legacy / older branch-management buttons
 
-These are still present and currently use a black/white system rather than the newer TBL navy gradient system.
+These are still present and currently use a black/white system rather than the newer Tavlo navy gradient system.
 
 | Button type | Selector | Default colors | Hover / active colors |
 | --- | --- | --- | --- |
@@ -118,6 +118,6 @@ These are still present and currently use a black/white system rather than the n
 ## Notes
 
 - The prototype currently has two visual systems at once:
-  - newer branded shell/buttons using TBL navy and paper tones
+  - newer branded shell/buttons using Tavlo navy and paper tones
   - older branch-management/table controls that still use black/white
-- If you want, the next cleanup pass can standardize the older black/white buttons onto the new TBL brand palette too.
+- If you want, the next cleanup pass can standardize the older black/white buttons onto the new Tavlo brand palette too.

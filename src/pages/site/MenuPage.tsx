@@ -36,7 +36,13 @@ export default function MenuPage() {
             </div>
             <div className="wl-menu-list">
               {section.items.map((item, index) => (
-                <article key={`${section.anchor}-${index}`}>
+                <article
+                  key={`${section.anchor}-${index}`}
+                  className={item.imageUrl ? "has-image" : undefined}
+                >
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt="" loading="lazy" />
+                  ) : null}
                   <div>
                     <h3>{item.name}</h3>
                     {item.description ? <p>{item.description}</p> : null}

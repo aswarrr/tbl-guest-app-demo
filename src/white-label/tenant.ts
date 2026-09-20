@@ -1,6 +1,6 @@
 import type { ReservationDraft } from "./types";
 
-const DRAFT_PREFIX = "tbl.restaurant-reservation-draft.v1";
+const DRAFT_PREFIX = "tavlo.restaurant-reservation-draft.v1";
 
 /**
  * Which restaurant this request is for.

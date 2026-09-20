@@ -6,7 +6,7 @@ const branchTwo = "b7c269f6-fa7e-45b9-8e70-6f753fd42abc";
 const slug = "sizzler-steak-house-and-co";
 const company = { id: "company-1", name: "Sizzler Steak House & Co.", slug, about: "A steakhouse.", logoUrl: null, coverUrl: null, currency: "EGP", cuisineName: "Steakhouse" };
 // Staff hold roles elsewhere in the platform; they are still ordinary diners here.
-const adminUser = { id: "admin-1", email: "boss@tbl.test", isSuperAdmin: true, companyRoles: [{ companyId: "company-1", roleName: "restaurant_manager" }], branchRoles: [] };
+const adminUser = { id: "admin-1", email: "boss@tavlo.test", isSuperAdmin: true, companyRoles: [{ companyId: "company-1", roleName: "restaurant_manager" }], branchRoles: [] };
 const menu = { currency: "EGP", updatedAt: null, sections: [{ name: "Starters", eyebrow: "To begin", anchor: "starters", items: [{ name: "Charred Aubergine", description: "Tahini.", price: 180, tags: ["Vegetarian"], available: true, imageUrl: null }] }] };
 const policy = { depositRequired: true, depositAmount: 200, depositCurrency: "EGP", bookingCutoffHours: 2, freeCancelWindowHours: 24, gracePeriodMinutes: 15, minPartySize: 1, maxPartySize: 8, minReservationDurationMinutes: 60, maxReservationDurationMinutes: 90, cancellationWindowHours: 24, lateCancelRefundPercent: 0, noShowRefundPercent: 0, turnTimeMinutes: 15 };
 const branches = [
@@ -89,7 +89,7 @@ test("guest can choose a real available table before authentication", async ({ p
     );
   });
   await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
-  const draft = await page.evaluate(() => sessionStorage.getItem("tbl.restaurant-reservation-draft.v1:sizzler-steak-house-and-co"));
+  const draft = await page.evaluate(() => sessionStorage.getItem("tavlo.restaurant-reservation-draft.v1:sizzler-steak-house-and-co"));
   expect(draft).toContain('"tableIds":["table-2","table-3"]');
 });
 

@@ -27,7 +27,7 @@ export default function ConfirmationPage() {
   const stateReservation = (location.state as { reservation?: CustomerReservation } | null)?.reservation;
   const [reservation, setReservation] = useState<CustomerReservation | null>(() => {
     if (stateReservation) return stateReservation;
-    try { return JSON.parse(sessionStorage.getItem(`tbl.confirmation:${reservationId}`) || "null") as CustomerReservation | null; } catch { return null; }
+    try { return JSON.parse(sessionStorage.getItem(`tavlo.confirmation:${reservationId}`) || "null") as CustomerReservation | null; } catch { return null; }
   });
   const [error, setError] = useState("");
 
@@ -39,7 +39,7 @@ export default function ConfirmationPage() {
   const calendarHref = useMemo(() => {
     if (!reservation?.reservationDateLocal) return "";
     const dates = toCalendarDate(reservation);
-    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//The TBL//Restaurant Reservation//EN", "BEGIN:VEVENT", `UID:${reservation.id}@thetbl`, `DTSTART:${dates.start}`, `DTEND:${dates.end}`, `SUMMARY:${escapeIcs(`${reservation.branchName} reservation`)}`, `DESCRIPTION:${escapeIcs(`Table ${reservation.tableLabels?.join(", ") || "reserved"} · ${reservation.partySize} guests`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+    const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Tavlo//Restaurant Reservation//EN", "BEGIN:VEVENT", `UID:${reservation.id}@tavlo`, `DTSTART:${dates.start}`, `DTEND:${dates.end}`, `SUMMARY:${escapeIcs(`${reservation.branchName} reservation`)}`, `DESCRIPTION:${escapeIcs(`Table ${reservation.tableLabels?.join(", ") || "reserved"} · ${reservation.partySize} guests`)}`, "END:VEVENT", "END:VCALENDAR"].join("\r\n");
     return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
   }, [reservation]);
 

@@ -36,12 +36,22 @@ export function ReservationLocations({
     </div>
   );
 }
+const DEFAULT_STEPS = ["Branch", "Date & time", "Your table", "Review"];
+
 export function ReservationFrame({
   step,
+  steps = DEFAULT_STEPS,
   summary,
   children,
 }: {
+  /** The current position in `steps`, counting from 1. */
   step: number;
+  /**
+   * The stages of this restaurant's booking flow. A restaurant that assigns
+   * tables itself has no table step, so the labels are supplied rather than
+   * assumed.
+   */
+  steps?: string[];
   summary: ReactNode;
   children: ReactNode;
 }) {
@@ -62,17 +72,15 @@ export function ReservationFrame({
         <span className="wl-kicker">Reservations</span>
         <h1>{r?.heading || "Find your table."}</h1>
         <p>{r?.supportingCopy || "Live availability across our locations."}</p>
-        {r && <span className="ws-booking-badge">Booking flow managed by TBL</span>}
+        {r && <span className="ws-booking-badge">Booking flow managed by Tavlo</span>}
       </header>
       <ol className="wl-progress">
-        {["Branch", "Date & time", "Your table", "Review"].map(
-          (label, index) => (
-            <li className={step >= index + 1 ? "is-active" : ""} key={label}>
-              <span>{index + 1}</span>
-              {label}
-            </li>
-          ),
-        )}
+        {steps.map((label, index) => (
+          <li className={step >= index + 1 ? "is-active" : ""} key={label}>
+            <span>{index + 1}</span>
+            {label}
+          </li>
+        ))}
       </ol>
       <div className="wl-booking-layout">
         <section className="wl-booking-panel">{children}</section>

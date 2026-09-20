@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import useTenant from "../hooks/useTenant";
 import { api } from "../services/api";
-import { validateConfig, type WebsiteConfigV1 } from "./contract";
+import { normalizeConfig, validateConfig, type WebsiteConfigV1 } from "./contract";
 import { PresentationContext } from "./presentation";
 export default function WebsiteProvider({ children }: { children: ReactNode }) {
   const { tenant, tenantSlug } = useTenant();
@@ -18,12 +18,13 @@ export default function WebsiteProvider({ children }: { children: ReactNode }) {
       })
       .then((response) => {
         const data = response.data.data;
-        if (
-          current &&
-          data?.config &&
-          !validateConfig(data.config, tenant.id).length
-        )
-          setSaved({ slug: tenantSlug, config: data.config });
+        if (!current || !data?.config) return;
+        // A site published before a schema field existed is brought up to date
+        // rather than failing validation: an invalid config is dropped whole,
+        // which would strip the restaurant's design back to bare chrome.
+        const config = normalizeConfig(data.config) as WebsiteConfigV1;
+        if (!validateConfig(config, tenant.id).length)
+          setSaved({ slug: tenantSlug, config });
       })
       .catch(() => {
         /* Presentation outages never block reservations. */

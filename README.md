@@ -1,6 +1,6 @@
-# TBL Guest App
+# Tavlo Guest App
 
-Guest-facing React application for browsing active TBL branches, viewing public opening
+Guest-facing React application for browsing active Tavlo branches, viewing public opening
 hours and policies, and starting reservation holds in each branch's local timezone.
 
 ## Local development

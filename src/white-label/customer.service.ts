@@ -1,4 +1,5 @@
 import { api } from "../services/api";
+import type { GuestFloorplan } from "../components/site/floorplan/types";
 import type {
   AvailableFloor,
   CustomerReservation,
@@ -59,6 +60,18 @@ export const customerService = {
     return unwrap<RestaurantBranchDetail>(response.data);
   },
 
+  /**
+   * The published layout for the seat picker, or null when the branch has not
+   * published one — in which case the reserve page falls back to a plain list
+   * of the tables that are free.
+   */
+  async getBranchFloorplan(branchId: string) {
+    const response = await api.get(`/api/mobile/branches/${branchId}/floorplan`, {
+      skipGlobalLoading: true,
+    });
+    return unwrap<GuestFloorplan | null>(response.data);
+  },
+
   async getBlindAvailability(
     branchId: string,
     payload: { date: string; partySize: number; durationMinutes: number },
@@ -90,7 +103,11 @@ export const customerService = {
       reservationDate: string;
       reservationTimeLocal: string;
       durationMinutes: number;
-      tableIds: string[];
+      /**
+       * Omitted when the restaurant does not let guests choose their table:
+       * the server then assigns one that fits the party.
+       */
+      tableIds?: string[];
       specialRequest?: string;
     },
   ) {
@@ -100,7 +117,10 @@ export const customerService = {
 
   async startPayment(reservationId: string) {
     const response = await api.post("/api/mobile/payments/start", { reservationId });
-    return unwrap<PaymentStatus & { attemptId: string; checkoutUrl: string }>(response.data);
+    // checkoutUrl is no longer universal: it is null for Stripe, whose Payment
+    // Element mounts from clientSecret instead. PaymentStatus already types
+    // both as optional.
+    return unwrap<PaymentStatus & { attemptId: string }>(response.data);
   },
 
   async getPaymentStatus(paymentId: string) {

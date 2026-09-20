@@ -4,12 +4,12 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const apiRoot = resolve(
-  process.env.TBL_API_ROOT || resolve(process.cwd(), "..", "the_tbl_api - REVAMP")
+  process.env.TAVLO_API_ROOT || resolve(process.cwd(), "..", "the_tbl_api - REVAMP")
 );
 
 if (!existsSync(apiRoot)) {
   throw new Error(
-    `TBL API repository not found at ${apiRoot}. Set TBL_API_ROOT to its absolute path.`
+    `Tavlo API repository not found at ${apiRoot}. Set TAVLO_API_ROOT to its absolute path.`
   );
 }
 
@@ -102,6 +102,10 @@ for (const [pattern, message] of [
   [
     /router\.get\(\s*["']\/branches\/:branchId\/menu["'],(?![^)]*requireAuth)/s,
     "The published branch menu is no longer publicly readable.",
+  ],
+  [
+    /router\.get\(\s*["']\/branches\/:branchId\/floorplan["'],(?![^)]*requireAuth)/s,
+    "The published floorplan is no longer publicly readable, so the reserve page cannot draw the real layout.",
   ],
 ]) {
   assert.match(catalogRoutes, pattern, message);

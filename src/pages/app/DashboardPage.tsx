@@ -137,7 +137,7 @@ export default function DashboardPage() {
   const rawUserPayload = user?.raw ?? user ?? null;
 
   return (
-    <AppLayout title="TBL Dashboard">
+    <AppLayout title="Tavlo Dashboard">
       <div className="section">
         <p>
           <strong>Status:</strong>{" "}

@@ -115,16 +115,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
 
-      <div className="toast-container toast-top-right" aria-live="polite" aria-atomic="false">
+      <div className="tv-toast-container" aria-live="polite" aria-atomic="false">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`ngx-toastr toast-${toast.type}`}
+            className={`tv-toast tv-toast-${toast.type}`}
             role={toast.type === "error" || toast.type === "warning" ? "alert" : "status"}
             onClick={() => dismissToast(toast.id)}
           >
+            <span className="tv-toast-accent" aria-hidden="true" />
+
+            <div className="tv-toast-body">
+              {toast.title ? <div className="tv-toast-title">{toast.title}</div> : null}
+              <div className="tv-toast-message">{toast.message}</div>
+            </div>
+
             <button
-              className="toast-close-button"
+              className="tv-toast-close"
               type="button"
               aria-label="Close notification"
               onClick={(event) => {
@@ -135,10 +142,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               ×
             </button>
 
-            {toast.title ? <div className="toast-title">{toast.title}</div> : null}
-            <div className="toast-message">{toast.message}</div>
             <div
-              className="toast-progress"
+              className="tv-toast-progress"
               style={{ animationDuration: `${toast.duration}ms` }}
             />
           </div>

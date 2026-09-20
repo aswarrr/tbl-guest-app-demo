@@ -7,7 +7,7 @@ type Props = {
   children: ReactNode;
 };
 
-export default function AppLayout({ title = "TBL", children }: Props) {
+export default function AppLayout({ title = "Tavlo", children }: Props) {
   const { isAuthenticated, logout } = useAuth();
 
   return (

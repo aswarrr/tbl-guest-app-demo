@@ -35,7 +35,7 @@ export default function FloorplanLegacyShell({
 
       <div className="floorplan-app-shell" id="main-app">
         <header className="floorplan-toolbar">
-          <span className="floorplan-logo">TBL Floorplan</span>
+          <span className="floorplan-logo">Tavlo Floorplan</span>
 
           <select
             id="version-selector"

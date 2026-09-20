@@ -6,6 +6,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import useTenant from "../../hooks/useTenant";
 import useTenantPath from "../../hooks/useTenantPath";
+import { useFeatures } from "../../website/features";
 import TenantLoader from "./TenantLoader";
 
 export default function SiteLayout() {
@@ -16,6 +17,7 @@ export default function SiteLayout() {
   const { isAuthenticated, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const tenantPath = useTenantPath();
+  const features = useFeatures();
 
   // The tab should name the restaurant a guest is actually looking at.
   useEffect(() => {
@@ -67,21 +69,25 @@ export default function SiteLayout() {
     );
   }
 
+  // StudioSite renders these pages itself; everything else falls through to the
+  // router. A switched-off menu is excluded so its route reaches FeatureRoute,
+  // which redirects, instead of StudioSite rendering the page anyway.
+  const studioPages = ["home", "about", "locations", "policies"];
+  if (features.menu) studioPages.push("menu");
   if (presentation.config)
     return (
       <StudioSite page={page}>
-        {["home", "about", "locations", "policies", "menu"].includes(
-          page,
-        ) ? undefined : (
-          <Outlet />
-        )}
+        {studioPages.includes(page) ? undefined : <Outlet />}
       </StudioSite>
     );
 
-  // The menu link only exists when the restaurant has published one.
+  // The menu link only exists when the restaurant has published one and has
+  // not switched the page off.
   const navItems = [
     { to: tenantPath(), label: "Home", end: true },
-    ...(menu ? [{ to: tenantPath("menu"), label: "Menu", end: false }] : []),
+    ...(menu && features.menu
+      ? [{ to: tenantPath("menu"), label: "Menu", end: false }]
+      : []),
     { to: tenantPath("about"), label: "About", end: false },
     { to: tenantPath("locations"), label: "Locations", end: false },
     { to: tenantPath("policies"), label: "Policies", end: false },
@@ -145,13 +151,15 @@ export default function SiteLayout() {
               Sign out
             </button>
           ) : null}
-          <Link
-            className="wl-button wl-button-small"
-            to={tenantPath("reserve")}
-            onClick={() => setMenuOpen(false)}
-          >
-            Reserve a table
-          </Link>
+          {features.reservations ? (
+            <Link
+              className="wl-button wl-button-small"
+              to={tenantPath("reserve")}
+              onClick={() => setMenuOpen(false)}
+            >
+              Reserve a table
+            </Link>
+          ) : null}
         </nav>
       </header>
 
@@ -167,13 +175,17 @@ export default function SiteLayout() {
           {tenant.about ? <p>{tenant.about}</p> : null}
         </div>
         <div className="wl-footer-links">
-          {menu ? <Link to={tenantPath("menu")}>Menu</Link> : null}
+          {menu && features.menu ? (
+            <Link to={tenantPath("menu")}>Menu</Link>
+          ) : null}
           <Link to={tenantPath("locations")}>Locations</Link>
           <Link to={tenantPath("policies")}>Reservation policies</Link>
-          <Link to={tenantPath("reserve")}>Book a table</Link>
+          {features.reservations ? (
+            <Link to={tenantPath("reserve")}>Book a table</Link>
+          ) : null}
         </div>
         <p className="wl-powered">
-          Reservations powered by <strong>The TBL</strong>
+          Reservations powered by <strong>Tavlo</strong>
         </p>
       </footer>
     </div>

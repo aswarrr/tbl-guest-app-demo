@@ -1,3 +1,16 @@
+/*
+ * Builder-rendered sites reuse the `wl-*` design system in white-label.css.
+ * This file only adds what the builder needs on top of it:
+ *   1. theme plumbing (fonts, spacing, button shape/size from the config)
+ *   2. hero alignment, which the original design does not need
+ *   3. the non-default layout variants
+ *   4. editor chrome (selection outlines, image placeholders)
+ * It must not restate layout that `wl-*` already owns, or the two renderers
+ * drift apart again.
+ */
+
+/* ---- 1. Theme plumbing ------------------------------------------------- */
+
 .ws-site {
   background: var(--wl-paper);
   color: var(--wl-ink);
@@ -9,191 +22,277 @@
   font-family: var(--ws-heading);
   font-weight: var(--ws-weight);
 }
+/* The `wl-*` rules own the type scale; headingScale only multiplies it. */
 .ws-site h1 {
-  font-size: calc(clamp(2rem, 5vw, 4.5rem) * var(--ws-heading-scale));
-  line-height: 1.1;
+  font-size: calc(clamp(55px, 8vw, 112px) * var(--ws-heading-scale));
 }
-.ws-site h2 {
-  font-size: calc(1.75rem * var(--ws-heading-scale));
+.ws-site .wl-section h2,
+.ws-site .wl-page h2 {
+  font-size: calc(clamp(38px, 5vw, 68px) * var(--ws-heading-scale));
 }
-.ws-site h3 {
-  font-size: calc(1.2rem * var(--ws-heading-scale));
+.ws-site .wl-reserve-banner h2 {
+  font-size: calc(clamp(45px, 6vw, 78px) * var(--ws-heading-scale));
+}
+.ws-site .wl-page-hero h1 {
+  font-size: calc(clamp(54px, 8vw, 105px) * var(--ws-heading-scale));
+}
+.ws-site .wl-section {
+  padding-block: var(--ws-space);
+}
+.ws-site .wl-reserve-page {
+  padding-block: var(--ws-space);
 }
 .ws-site .wl-button {
+  border-radius: var(--ws-radius);
+  padding: var(--ws-button-pad);
   box-shadow: 0 10px 28px color-mix(in srgb, var(--wl-accent) 16%, transparent);
+}
+.ws-buttons-outline .wl-button {
+  background: transparent;
+  color: var(--wl-accent);
+  border: 1px solid var(--wl-accent);
+  box-shadow: none;
+}
+.ws-buttons-outline .wl-button:hover:not(:disabled) {
+  background: var(--wl-accent);
+  color: #fff;
 }
 .ws-site .wl-button:focus-visible,
 .ws-selectable:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--wl-accent) 55%, white);
   outline-offset: 3px;
 }
-.ws-site .ws-header-brand a,
-.ws-site .ws-header-brand .wl-wordmark {
-  color: white;
-}
-.ws-header-brand .wl-menu-button span {
-  background: white;
-}
-.ws-header-brand .wl-nav.is-open a {
-  color: var(--wl-ink);
-}
-.ws-site .wl-reserve-page {
-  padding-block: var(--ws-space);
-}
+/* Config copy is authored in a textarea, so newlines are meaningful. */
 .ws-site p {
   white-space: pre-line;
 }
-.ws-site img {
-  object-fit: cover;
-  max-width: 100%;
-}
-.ws-site .wl-button {
-  border-radius: var(--ws-radius);
-  padding: var(--ws-button-pad);
-}
-.ws-buttons-outline .wl-button {
-  background: transparent;
-  color: var(--wl-accent);
-  border: 1px solid var(--wl-accent);
-}
-.ws-section {
-  padding: var(--ws-space) max(6vw, 24px);
-}
-.ws-section > p {
-  max-width: 70ch;
-}
-.ws-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-}
-.ws-grid img,
-.ws-gallery img,
-.ws-photo-placeholder {
-  width: 100%;
-  aspect-ratio: 4/3;
-  background: #dedbd5;
-}
-.ws-grid article {
-  min-width: 0;
-}
-.ws-story {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  gap: 50px;
-}
-.ws-story img {
-  width: 100%;
-  aspect-ratio: 4/3;
-}
-.ws-story-image-left > div {
-  order: 2;
-}
-.ws-story-text {
+.ws-site .wl-wordmark small {
   display: block;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
 }
-.ws-hero {
-  position: relative;
-  min-height: 600px;
-  display: grid;
-  color: white;
+
+/* ---- 2. Hero alignment -------------------------------------------------
+ * `.wl-actions` is a flex row, so inherited `text-align` cannot move it.
+ * Every alignment therefore sets the copy alignment AND the action row
+ * together. Driven by a data attribute so it does not depend on the
+ * serialized form of an inline style.
+ */
+
+.wl-hero[data-alignment="left"] .wl-hero-copy {
+  text-align: left;
 }
-.ws-hero > img,
-.ws-hero > .ws-photo-placeholder {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: auto;
+.wl-hero[data-alignment="left"] .wl-actions {
+  justify-content: flex-start;
 }
-.ws-hero-copy {
-  position: relative;
-  z-index: 1;
-  padding: 100px 8%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-.ws-hero-split {
-  grid-template-columns: 1fr 1fr;
-  background: var(--wl-accent);
-}
-.ws-hero-split > img,
-.ws-hero-split > .ws-photo-placeholder {
-  position: relative;
-  grid-column: 2;
-  grid-row: 1;
-}
-.ws-hero-split .ws-hero-copy {
-  grid-column: 1;
-  grid-row: 1;
-}
-.ws-hero-centered .ws-hero-copy {
-  max-width: 950px;
-  margin: 70px auto;
+.wl-hero[data-alignment="center"] .wl-hero-copy {
+  margin-inline: auto;
   text-align: center;
 }
-.ws-actions {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
+.wl-hero[data-alignment="center"] .wl-hero-copy > p {
+  margin-inline: auto;
 }
-.ws-hero [style*="text-align: center"] .ws-actions {
+.wl-hero[data-alignment="center"] .wl-actions {
   justify-content: center;
 }
-.ws-gallery {
+.wl-hero[data-alignment="right"] .wl-hero-copy {
+  margin-inline-start: auto;
+  text-align: right;
+}
+.wl-hero[data-alignment="right"] .wl-hero-copy > p {
+  margin-inline-start: auto;
+}
+.wl-hero[data-alignment="right"] .wl-actions {
+  justify-content: flex-end;
+}
+
+/* ---- 3. Layout variants ------------------------------------------------
+ * `full` / `cards` / `image-right` are the defaults and add nothing: they are
+ * the original design. Only the alternatives need rules, and they are built
+ * from the same tokens so they read as options in one design language.
+ */
+
+/* Hero: centered caps the measure; alignment above still wins, because these
+   selectors are single-class and the alignment rules are attribute+class. */
+.ws-hero-centered .wl-hero-copy {
+  max-width: 950px;
+  margin-inline: auto;
+  text-align: center;
+}
+.ws-hero-centered .wl-actions {
+  justify-content: center;
+}
+/* Hero: split puts the photo beside the copy instead of behind it. */
+.ws-hero-split {
   display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  padding: 0;
+  background-image: none !important;
+  background: var(--wl-accent);
+}
+.ws-hero-split .wl-hero-copy {
+  grid-column: 1;
+  grid-row: 1;
+  max-width: none;
+  align-self: center;
+  padding: clamp(70px, 8vw, 120px) clamp(24px, 5vw, 90px);
+}
+.ws-hero-split .ws-hero-photo {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.ws-hero-split .wl-hero-note {
+  display: none;
+}
+
+/* Story: the default `text` variant is the original two-column intro grid.
+   The image variants add a photo under the copy column. */
+.ws-story-photo {
+  width: 100%;
+  margin: 30px 0 25px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+/* `image-left` renders the photo in the heading column and `image-right` in the
+   copy column (see StudioSite). The two text columns keep the original order in
+   both cases — flipping the grid would also swap heading and body. */
+
+/* The base intro grid centres its two columns against each other, which reads
+   right when both hold only text. Once a variant puts a photo in one column
+   that column grows tall, and centring would leave the short column floating
+   mid-air — so the image variants go back to top alignment. */
+.ws-story-image-left,
+.ws-story-image-right {
+  align-items: start;
+}
+
+/* Locations: `feature` stacks one wide card per row. */
+.ws-locations-feature .wl-location-grid {
+  grid-template-columns: 1fr;
+}
+.ws-locations-feature .wl-location-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.ws-locations-feature .wl-location-card > img,
+.ws-locations-feature .wl-location-card > .ws-photo-placeholder {
+  height: 100% !important;
+}
+
+/* Gallery: the default `three-column` is the original 1.25/.75/.75 strip. */
+.ws-gallery-mosaic,
+.ws-gallery-large-with-two-small {
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  height: auto;
+  gap: 4px;
+}
+.ws-gallery-mosaic img,
+.ws-gallery-mosaic .ws-photo-placeholder,
+.ws-gallery-large-with-two-small img,
+.ws-gallery-large-with-two-small .ws-photo-placeholder {
+  aspect-ratio: 4 / 3;
+  height: 100%;
 }
 .ws-gallery-mosaic > :nth-child(4n + 1) {
   grid-column: span 2;
 }
 .ws-gallery-large-with-two-small > :nth-child(3n + 1) {
   grid-row: span 2;
-  height: 100%;
 }
-.ws-locations-feature .ws-grid {
-  grid-template-columns: 1fr;
+
+/* CTA and header backgrounds. */
+.ws-background-paper {
+  background: var(--wl-paper) !important;
+  color: var(--wl-ink);
 }
-.ws-locations-feature article {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 40px;
-}
-.ws-locations-feature article > img {
-  grid-row: span 9;
-}
-.ws-background-brand,
-.ws-header-brand {
-  background: var(--wl-accent) !important;
-  color: white;
+.ws-background-paper .wl-kicker {
+  color: var(--wl-accent);
 }
 .ws-background-image {
   background-size: cover;
   background-position: center;
 }
+.ws-header-brand {
+  background: var(--wl-accent) !important;
+  color: #fff;
+}
+.ws-site .ws-header-brand a,
+.ws-site .ws-header-brand .wl-wordmark {
+  color: #fff;
+}
+.ws-header-brand .wl-menu-button span {
+  background: #fff;
+}
+.ws-header-brand .wl-nav.is-open a {
+  color: var(--wl-ink);
+}
 .ws-header-transparent {
   background: transparent !important;
 }
 .ws-header-white {
-  background: white;
+  background: #fff;
 }
-.ws-cta {
-  text-align: center;
+
+/* Reservation preview summary styles. */
+.ws-summary-minimal .wl-booking-summary {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.ws-cta p {
-  margin-inline: auto;
+.ws-summary-filled .wl-booking-summary {
+  background: var(--wl-paper);
+  border: 0;
 }
-.ws-site .wl-wordmark {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.ws-summary-outlined .wl-booking-summary {
+  border: 1px solid var(--wl-accent);
 }
-.ws-site .wl-wordmark small {
-  display: block;
-  font-size: 12px;
+.ws-site fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+/* ---- 4. Editor chrome --------------------------------------------------- */
+
+.ws-photo-placeholder {
+  background: #dedbd5;
+}
+/* An unfilled gallery only exists in the editor (the published site drops the
+   section). Keep it short so it reads as a slot to fill, not a blank screen. */
+.wl-gallery:not(:has(img)) {
+  height: 220px;
+}
+/* The original always renders six policy cards, so its grid never has a hole.
+   Toggling cards off here can leave one, which would show the grid's gap colour
+   as a stray block — let the last row stretch instead. */
+.ws-site .wl-policy-grid {
+  grid-auto-flow: dense;
+}
+.ws-site .wl-policy-grid article:last-child:nth-child(3n + 1) {
+  grid-column: span 3;
+}
+.ws-site .wl-policy-grid article:last-child:nth-child(3n + 2) {
+  grid-column: span 2;
+}
+@media (max-width: 900px) {
+  .ws-site .wl-policy-grid article:last-child:nth-child(3n + 1),
+  .ws-site .wl-policy-grid article:last-child:nth-child(3n + 2) {
+    grid-column: auto;
+  }
+  .ws-site .wl-policy-grid article:last-child:nth-child(2n + 1) {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 680px) {
+  .ws-site .wl-policy-grid article:last-child:nth-child(2n + 1) {
+    grid-column: auto;
+  }
 }
 .ws-selectable {
   position: relative;
@@ -207,71 +306,26 @@
   outline: 3px solid #3780ff;
   outline-offset: -3px;
 }
-.ws-summary-minimal .wl-booking-summary {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-}
-.ws-summary-filled .wl-booking-summary {
-  background: var(--wl-paper);
-  border: 0;
-}
-.ws-summary-outlined .wl-booking-summary {
-  border: 1px solid var(--wl-accent);
-}
-.ws-booking-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border: 1px solid currentColor;
-  border-radius: 999px;
-  font-size: 12px;
-}
-.ws-site fieldset {
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-}
-.ws-site select {
-  padding: 12px;
-  border: 1px solid #aaa;
-  border-radius: 8px;
-  max-width: 100%;
-}
-.ws-branch ul {
-  padding-left: 18px;
-}
-@media (max-width: 800px) {
-  .ws-grid,
-  .ws-story,
+
+@media (max-width: 900px) {
   .ws-hero-split {
     grid-template-columns: 1fr;
   }
-  .ws-hero-split > img,
-  .ws-hero-split > .ws-photo-placeholder {
+  .ws-hero-split .ws-hero-photo {
     grid-column: 1;
     grid-row: 1;
     height: 300px;
   }
-  .ws-hero-split .ws-hero-copy {
+  .ws-hero-split .wl-hero-copy {
     grid-row: 2;
   }
-  .ws-hero-copy {
-    padding: 70px 24px;
-  }
-  .ws-gallery {
-    gap: 8px;
-  }
-  .ws-story-image-left > div {
-    order: 0;
-  }
-  .ws-locations-feature article {
+  .ws-locations-feature .wl-location-card {
     display: block;
   }
-  .ws-hero {
-    min-height: 500px;
-  }
-  .ws-section {
-    padding: 40px 24px;
+}
+@media (max-width: 680px) {
+  .ws-gallery-mosaic,
+  .ws-gallery-large-with-two-small {
+    grid-template-columns: 1fr 1fr;
   }
 }

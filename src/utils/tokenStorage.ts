@@ -2,7 +2,7 @@ import { previewMode } from "../website/mode";
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 
-export const AUTH_STORAGE_EVENT = "tbl-auth-storage-changed";
+export const AUTH_STORAGE_EVENT = "tavlo-auth-storage-changed";
 
 export function getAccessToken() {
   if(previewMode) return null;

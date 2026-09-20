@@ -5,6 +5,7 @@ import { AuthContext } from "../context/auth-context";
 import { PresentationContext } from "./presentation";
 import {
   isRecord,
+  normalizeConfig,
   sectionIds,
   validateConfig,
   type PreviewSnapshot,
@@ -40,7 +41,7 @@ function send(type: string, payload: object = {}) {
   if (authorized)
     window.parent.postMessage(
       {
-        channel: "tbl.website",
+        channel: "tavlo.website",
         protocol: 2,
         schema: 1,
         session,
@@ -84,7 +85,7 @@ export default function PreviewApp() {
         event.source !== window.parent ||
         event.origin !== parentOrigin ||
         !isRecord(d) ||
-        d.channel !== "tbl.website" ||
+        d.channel !== "tavlo.website" ||
         d.session !== session ||
         d.tenant !== tenant ||
         d.companyId !== companyId
@@ -119,6 +120,9 @@ export default function PreviewApp() {
       )
         return;
       const snapshot = d.snapshot;
+      // Normalized like the live site: a Builder tab opened before a schema
+      // field was added still sends configurations without it.
+      d.config = normalizeConfig(d.config) as WebsiteConfigV1;
       if (
         validateConfig(d.config, companyId!).length ||
         !validSnapshot(snapshot, companyId!, tenant) ||

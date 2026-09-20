@@ -29,18 +29,18 @@ function transformAppScript(raw: string) {
 
   next = next.replace(
     "const STORAGE_KEY = 'floorplan_dynamic_v1';",
-    "const STORAGE_KEY = window.__TBL_FLOORPLAN_CONFIG.storageKey;"
+    "const STORAGE_KEY = window.__TAVLO_FLOORPLAN_CONFIG.storageKey;"
   );
 
   next = next.replace(
     "branchId: 'branch-001',",
-    "branchId: window.__TBL_FLOORPLAN_CONFIG.branchId,"
+    "branchId: window.__TAVLO_FLOORPLAN_CONFIG.branchId,"
   );
 
   next =
     `
-const API_BASE_URL = window.__TBL_FLOORPLAN_CONFIG.apiBaseUrl;
-const TOKEN_KEY = window.__TBL_FLOORPLAN_CONFIG.tokenKey;
+const API_BASE_URL = window.__TAVLO_FLOORPLAN_CONFIG.apiBaseUrl;
+const TOKEN_KEY = window.__TAVLO_FLOORPLAN_CONFIG.tokenKey;
 ` + next;
 
   return next;
@@ -70,7 +70,7 @@ window.__floorplanLegacyInit = async function () {
   refreshUI();
 
   if (typeof loadDynamicFloorplan === 'function') {
-    await loadDynamicFloorplan(window.__TBL_FLOORPLAN_CONFIG.branchId);
+    await loadDynamicFloorplan(window.__TAVLO_FLOORPLAN_CONFIG.branchId);
   }
 
   refreshUI();
@@ -102,9 +102,9 @@ function buildBootstrapScript({
   };
 
   return `
-window.__TBL_FLOORPLAN_CONFIG = ${JSON.stringify(config, null, 2)};
+window.__TAVLO_FLOORPLAN_CONFIG = ${JSON.stringify(config, null, 2)};
 try {
-  localStorage.setItem(window.__TBL_FLOORPLAN_CONFIG.tokenKey, window.__TBL_FLOORPLAN_CONFIG.accessToken);
+  localStorage.setItem(window.__TAVLO_FLOORPLAN_CONFIG.tokenKey, window.__TAVLO_FLOORPLAN_CONFIG.accessToken);
 } catch (e) {
   console.warn("Unable to persist floorplan token in iframe localStorage", e);
 }
@@ -148,7 +148,7 @@ body {
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TBL Floorplan</title>
+    <title>Tavlo Floorplan</title>
     <style>${inlineCss}</style>
   </head>
   <body>

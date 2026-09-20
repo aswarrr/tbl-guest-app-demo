@@ -164,11 +164,32 @@ export type CustomerReservation = {
   branchLongitude?: number | null;
 };
 
+/** Which rail a payment travels on. Chosen server-side, per restaurant. */
+export type PaymentProvider = "STRIPE" | "PAYMOB";
+
 export type PaymentStatus = {
   paymentId: string;
   reservationId: string;
   status: "PENDING" | "SUCCEEDED" | "FAILED" | "NEEDS_REFUND";
   resolution?: string | null;
+  provider?: PaymentProvider;
+  /**
+   * Paymob only. Stripe hosted Checkout sets X-Frame-Options and cannot be
+   * framed, so a Stripe payment carries a client secret instead and the
+   * Payment Element is mounted from it.
+   */
   checkoutUrl?: string | null;
+  /** Stripe: what the Payment Element mounts from. */
+  clientSecret?: string | null;
+  /** Stripe: publishable key, safe for the browser. */
+  publishableKey?: string | null;
+  /**
+   * Stripe: the restaurant's connected account. Stripe.js MUST be initialized
+   * with this - an intent created on a connected account cannot be confirmed
+   * by a client initialized for the platform.
+   */
+  connectedAccountId?: string | null;
+  currency?: string | null;
+  amount?: number | null;
   reservation?: CustomerReservation | null;
 };

@@ -125,7 +125,7 @@ export default function Sidebar() {
         <div className="sidebar-brand">
           <img
             src={Logo}
-            alt="The TBL guest app logo"
+            alt="Tavlo guest app logo"
             className="sidebar-brand-logo"
           />
         </div>

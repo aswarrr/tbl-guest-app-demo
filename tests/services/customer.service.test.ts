@@ -73,4 +73,67 @@ describe("white-label customer API", () => {
     expect(apiMock.get).toHaveBeenCalledWith("/api/mobile/payments/payment-1", { skipGlobalLoading: true });
     expect(apiMock.post).toHaveBeenNthCalledWith(2, "/api/mobile/reservations/reservation-1/confirm");
   });
+
+  /**
+   * The provider is chosen server-side, per restaurant, and the guest app just
+   * renders whichever shape comes back. These two tests pin that both shapes
+   * survive the service layer untouched - a dropped clientSecret or
+   * connectedAccountId is a payment the Payment Element cannot mount.
+   */
+  it("passes a Stripe payment session through with its client config intact", async () => {
+    apiMock.post.mockResolvedValueOnce({ data: { ok: true, data: {
+      paymentId: "payment-1",
+      attemptId: "attempt-1",
+      provider: "STRIPE",
+      checkoutUrl: null,
+      clientSecret: "pi_123_secret_abc",
+      publishableKey: "pk_test_123",
+      connectedAccountId: "acct_rest_1",
+    } } });
+
+    await expect(customerService.startPayment("reservation-1")).resolves.toMatchObject({
+      provider: "STRIPE",
+      // Null, not missing: Stripe hosted Checkout cannot be iframed, so there
+      // is no URL to frame and the Payment Element mounts from the secret.
+      checkoutUrl: null,
+      clientSecret: "pi_123_secret_abc",
+      publishableKey: "pk_test_123",
+      // Without this Stripe.js is initialized for the platform and cannot
+      // confirm an intent created on the restaurant's account.
+      connectedAccountId: "acct_rest_1",
+    });
+  });
+
+  it("still returns a Paymob checkout URL for a restaurant without Stripe", async () => {
+    apiMock.post.mockResolvedValueOnce({ data: { ok: true, data: {
+      paymentId: "payment-2",
+      attemptId: "attempt-2",
+      provider: "PAYMOB",
+      checkoutUrl: "https://accept.paymob.com/unifiedcheckout/?publicKey=pk&clientSecret=cs",
+    } } });
+
+    await expect(customerService.startPayment("reservation-2")).resolves.toMatchObject({
+      provider: "PAYMOB",
+      checkoutUrl: "https://accept.paymob.com/unifiedcheckout/?publicKey=pk&clientSecret=cs",
+    });
+  });
+
+  it("exposes the Stripe client config on status, so a reload can resume", async () => {
+    // A clientSecret stashed in sessionStorage can go stale; the guest app
+    // re-reads this on resume rather than trusting what it stored.
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: {
+      paymentId: "payment-1",
+      status: "PENDING",
+      provider: "STRIPE",
+      clientSecret: "pi_123_secret_abc",
+      publishableKey: "pk_test_123",
+      connectedAccountId: "acct_rest_1",
+    } } });
+
+    await expect(customerService.getPaymentStatus("payment-1")).resolves.toMatchObject({
+      provider: "STRIPE",
+      clientSecret: "pi_123_secret_abc",
+      connectedAccountId: "acct_rest_1",
+    });
+  });
 });

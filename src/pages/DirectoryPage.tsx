@@ -57,7 +57,7 @@ export default function DirectoryPage() {
   if (tenants.length === 0) {
     return (
       <main className="wl-state-page">
-        <span className="wl-kicker">The TBL</span>
+        <span className="wl-kicker">Tavlo</span>
         <h1>No restaurants are published yet.</h1>
         <p>Once a restaurant publishes its site, it will appear here.</p>
       </main>
@@ -67,7 +67,7 @@ export default function DirectoryPage() {
   return (
     <main className="wl-directory">
       <header className="wl-directory-head">
-        <span className="wl-kicker">The TBL</span>
+        <span className="wl-kicker">Tavlo</span>
         <h1>Book a table.</h1>
         <p>Choose a restaurant to see its locations, menu and availability.</p>
       </header>

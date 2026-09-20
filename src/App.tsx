@@ -6,6 +6,7 @@ import OtpVerifyPage from "./pages/auth/OtpVerifyPage";
 import { TenantProvider } from "./context/TenantProvider";
 import SiteLayout from "./components/site/SiteLayout";
 import SiteErrorBoundary from "./components/site/SiteErrorBoundary";
+import FeatureRoute from "./components/site/FeatureRoute";
 import DirectoryPage from "./pages/DirectoryPage";
 import HomePage from "./pages/site/HomePage";
 import MenuPage from "./pages/site/MenuPage";
@@ -14,11 +15,13 @@ import LocationsPage from "./pages/site/LocationsPage";
 import PoliciesPage from "./pages/site/PoliciesPage";
 import ReservePage from "./pages/site/ReservePage";
 import ConfirmationPage from "./pages/site/ConfirmationPage";
+import PaymentRequestPage from "./pages/site/PaymentRequestPage";
 
 export default function App() {
   return (
     <SiteErrorBoundary>
       <Routes>
+        <Route path="/pay/:token" element={<PaymentRequestPage />} />
         {/* The host root lists the restaurants that have a public site. */}
         <Route path="/" element={<DirectoryPage />} />
 
@@ -35,11 +38,25 @@ export default function App() {
           }
         >
           <Route index element={<HomePage />} />
-          <Route path="menu" element={<MenuPage />} />
+          <Route
+            path="menu"
+            element={
+              <FeatureRoute need="menu">
+                <MenuPage />
+              </FeatureRoute>
+            }
+          />
           <Route path="about" element={<AboutPage />} />
           <Route path="locations" element={<LocationsPage />} />
           <Route path="policies" element={<PoliciesPage />} />
-          <Route path="reserve" element={<ReservePage />} />
+          <Route
+            path="reserve"
+            element={
+              <FeatureRoute need="reservations">
+                <ReservePage />
+              </FeatureRoute>
+            }
+          />
           <Route path="auth/login" element={<LoginPage />} />
           <Route path="auth/signup" element={<SignupPage />} />
           <Route path="auth/verify" element={<OtpVerifyPage />} />

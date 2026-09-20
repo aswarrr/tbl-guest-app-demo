@@ -26,7 +26,7 @@ export default function Sidebar() {
       }}
     >
       <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 12, opacity: 0.7 }}>TBL</div>
+        <div style={{ fontSize: 12, opacity: 0.7 }}>Tavlo</div>
         <div style={{ fontSize: 22, fontWeight: 800 }}>Workspace</div>
       </div>
 

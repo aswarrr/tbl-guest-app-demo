@@ -1,0 +1,128 @@
+/* The published floorplan, as a seat picker. */
+
+.wl-floorplan {
+  /* Selected tables paint with currentColor so they follow the tenant's
+     accent without threading a colour through every shape. */
+  color: var(--wl-accent);
+}
+
+.wl-floorplan-stage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3 / 2;
+  max-height: 60vh;
+  border: 1px solid #ded8d0;
+  border-radius: 14px;
+  background: #fffdf8;
+}
+
+.wl-floorplan-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wl-floorplan-table {
+  cursor: pointer;
+}
+
+.wl-floorplan-table:focus {
+  outline: none;
+}
+
+/* Drawn in SVG rather than as a CSS outline: outlines on a <g> are not
+   rendered consistently across browsers. */
+.wl-floorplan-table:focus-visible > g > g {
+  stroke: var(--wl-accent);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+.wl-floorplan-zoom {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #ded8d0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 4px 14px #42352a1a;
+}
+
+.wl-floorplan-zoom button {
+  width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: #5e5851;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.wl-floorplan-zoom button + button {
+  border-top: 1px solid #eee9e3;
+}
+
+.wl-floorplan-zoom button:hover {
+  background: #f6f2ec;
+  color: var(--wl-accent);
+}
+
+.wl-floorplan-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wl-floorplan-list button {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  min-height: 62px;
+  padding: 12px 14px;
+  border: 1px solid #ddd6cf;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--wl-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.wl-floorplan-list button:hover,
+.wl-floorplan-list button.is-selected {
+  border-color: var(--wl-accent);
+  color: var(--wl-accent);
+  box-shadow: 0 6px 18px #8f1d2c1f;
+}
+
+.wl-floorplan-list strong {
+  font: 400 var(--wl-text-md) var(--wl-font-display);
+}
+
+.wl-floorplan-list small {
+  color: #8c847c;
+  font-size: var(--wl-text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.wl-floorplan-list button.is-selected small {
+  color: inherit;
+}
+
+/* On a narrow screen the list is the primary control and the map is context. */
+@media (max-width: 560px) {
+  .wl-floorplan-stage {
+    aspect-ratio: 4 / 3;
+    max-height: 42vh;
+  }
+
+  .wl-floorplan-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
