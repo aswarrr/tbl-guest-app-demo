@@ -14,7 +14,7 @@ const methods: Array<{
   {
     id: "CARD",
     label: "Credit or Debit Card",
-    description: "Secure card payment powered by Paymob",
+    description: "Secure card payment",
   },
   {
     id: "APPLE_PAY",
@@ -51,7 +51,7 @@ export default function PaymentMethodSelector({ value, onChange, disabled = fals
           );
         })}
       </div>
-      <p>Your selected option will open in Paymob’s secure checkout. Apple Pay availability is confirmed there for your device.</p>
+      <p>Your selected option opens in the restaurant’s secure checkout, where the exact methods available to your device are confirmed.</p>
     </fieldset>
   );
 }
