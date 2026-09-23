@@ -95,10 +95,12 @@ export default function HomePage() {
       ) : null}
 
       <section className="wl-reserve-banner">
-        <span className="wl-kicker wl-kicker-light">Your table is waiting</span>
-        <h2>Make tonight one to remember.</h2>
-        <p>Live availability, your choice of location, and a table selected by you.</p>
-        <Link className="wl-button wl-button-light" to={tenantPath("reserve")}>Find a table</Link>
+        <div className="wl-reserve-banner-inner">
+          <span className="wl-kicker wl-kicker-light">Your table is waiting</span>
+          <h2>Make tonight one to remember.</h2>
+          <p>Live availability, your choice of location, and a table selected by you.</p>
+          <Link className="wl-button wl-button-light" to={tenantPath("reserve")}>Find a table</Link>
+        </div>
       </section>
     </>
   );
