@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const apiRoot = resolve(
-  process.env.TBL_API_ROOT || resolve(process.cwd(), "..", "the_tbl_api - REVAMP")
+  process.env.TBL_API_ROOT || resolve(process.cwd(), "..", "the_tbl_api-revamp")
 );
 
 if (!existsSync(apiRoot)) {
