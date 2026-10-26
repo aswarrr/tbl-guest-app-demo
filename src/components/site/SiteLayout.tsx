@@ -7,6 +7,7 @@ import useAuth from "../../hooks/useAuth";
 import useTenant from "../../hooks/useTenant";
 import useTenantPath from "../../hooks/useTenantPath";
 import TenantLoader from "./TenantLoader";
+import PoweredByTavlo from "../branding/PoweredByTavlo";
 
 export default function SiteLayout() {
   const presentation = usePresentation();
@@ -21,17 +22,41 @@ export default function SiteLayout() {
   useEffect(() => {
     if (!tenant) return;
     const previous = document.title;
-    document.title = `${tenant.name} | Reservations`;
+    document.title = presentation.config?.features.reservations === false
+      ? tenant.name
+      : `${tenant.name} | Reservations`;
     return () => {
       document.title = previous;
     };
-  }, [tenant]);
+  }, [tenant, presentation.config?.features.reservations]);
+
+  // A Studio-configured tenant's theme background must reach past the
+  // React root: the native html/body canvas (visible on overscroll, and
+  // during first paint) otherwise stays the app shell's default color
+  // instead of the restaurant's chosen paper color. Legacy (non-Studio)
+  // tenants never set this, so their look is untouched.
+  useEffect(() => {
+    const root = document.documentElement;
+    const theme = presentation.config?.theme;
+    if (!theme) return;
+    root.setAttribute("data-wl-theme", "studio");
+    root.style.setProperty("--wl-paper", theme.backgroundColor);
+    root.style.setProperty("--wl-ink", theme.textColor);
+    return () => {
+      root.removeAttribute("data-wl-theme");
+      root.style.removeProperty("--wl-paper");
+      root.style.removeProperty("--wl-ink");
+    };
+  }, [presentation.config?.theme]);
 
   if (loading) {
     return (
-      <main className="wl-state-page">
-        <TenantLoader tenant={tenant} text="Preparing your table…" />
-      </main>
+      <>
+        <main className="wl-state-page">
+          <TenantLoader tenant={tenant} text="Preparing your table…" />
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
@@ -39,31 +64,37 @@ export default function SiteLayout() {
   // that would not answer, so it gets its own wording and no retry button.
   if (notFound || !tenant) {
     return (
-      <main className="wl-state-page">
-        <span className="wl-kicker">Restaurant not found</span>
-        <h1>We couldn’t find that restaurant.</h1>
-        <p>Check the address, or browse the restaurants we host.</p>
-        <Link className="wl-button" to="/">
-          Browse restaurants
-        </Link>
-      </main>
+      <>
+        <main className="wl-state-page">
+          <span className="wl-kicker">Restaurant not found</span>
+          <h1>We couldn’t find that restaurant.</h1>
+          <p>Check the address, or browse the restaurants we host.</p>
+          <Link className="wl-button" to="/">
+            Browse restaurants
+          </Link>
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
   if (error && tenant === null) {
     return (
-      <main className="wl-state-page">
-        <span className="wl-kicker">Restaurant unavailable</span>
-        <h1>We couldn’t open this restaurant website.</h1>
-        <p>{error}</p>
-        <button
-          className="wl-button"
-          type="button"
-          onClick={() => void refresh()}
-        >
-          Try again
-        </button>
-      </main>
+      <>
+        <main className="wl-state-page">
+          <span className="wl-kicker">Restaurant unavailable</span>
+          <h1>We couldn’t open this restaurant website.</h1>
+          <p>{error}</p>
+          <button
+            className="wl-button"
+            type="button"
+            onClick={() => void refresh()}
+          >
+            Try again
+          </button>
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
@@ -172,9 +203,7 @@ export default function SiteLayout() {
           <Link to={tenantPath("policies")}>Reservation policies</Link>
           <Link to={tenantPath("reserve")}>Book a table</Link>
         </div>
-        <p className="wl-powered">
-          Reservations powered by <strong>The TBL</strong>
-        </p>
+        <PoweredByTavlo surface="dark" className="wl-powered" />
       </footer>
     </div>
   );

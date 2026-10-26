@@ -62,7 +62,7 @@ export function ReservationFrame({
         <span className="wl-kicker">Reservations</span>
         <h1>{r?.heading || "Find your table."}</h1>
         <p>{r?.supportingCopy || "Live availability across our locations."}</p>
-        {r && <span className="ws-booking-badge">Booking flow managed by TBL</span>}
+        {r && <span className="ws-booking-badge">Secure booking</span>}
       </header>
       <ol className="wl-progress">
         {["Branch", "Date & time", "Your table", "Review"].map(

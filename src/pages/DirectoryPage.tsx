@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { customerService } from "../white-label/customer.service";
 import type { TenantSummary } from "../white-label/types";
 import Loader from "../components/Loader";
+import PoweredByTavlo from "../components/branding/PoweredByTavlo";
 
 /**
  * The host root. Restaurants are addressed at /restaurant-name, so the bare
@@ -38,57 +39,69 @@ export default function DirectoryPage() {
 
   if (loading) {
     return (
-      <main className="wl-state-page">
-        <Loader text="Loading restaurants…" />
-      </main>
+      <>
+        <main className="wl-state-page">
+          <Loader text="Loading restaurants…" />
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
   if (error) {
     return (
-      <main className="wl-state-page">
-        <span className="wl-kicker">Something went wrong</span>
-        <h1>We couldn’t load restaurants.</h1>
-        <p>{error}</p>
-      </main>
+      <>
+        <main className="wl-state-page">
+          <span className="wl-kicker">Something went wrong</span>
+          <h1>We couldn’t load restaurants.</h1>
+          <p>{error}</p>
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
   if (tenants.length === 0) {
     return (
-      <main className="wl-state-page">
-        <span className="wl-kicker">The TBL</span>
-        <h1>No restaurants are published yet.</h1>
-        <p>Once a restaurant publishes its site, it will appear here.</p>
-      </main>
+      <>
+        <main className="wl-state-page">
+          <span className="wl-kicker">Reservations</span>
+          <h1>No restaurants are published yet.</h1>
+          <p>Once a restaurant publishes its site, it will appear here.</p>
+        </main>
+        <PoweredByTavlo surface="light" />
+      </>
     );
   }
 
   return (
-    <main className="wl-directory">
-      <header className="wl-directory-head">
-        <span className="wl-kicker">The TBL</span>
-        <h1>Book a table.</h1>
-        <p>Choose a restaurant to see its locations, menu and availability.</p>
-      </header>
+    <>
+      <main className="wl-directory">
+        <header className="wl-directory-head">
+          <span className="wl-kicker">Reservations</span>
+          <h1>Book a table.</h1>
+          <p>Choose a restaurant to see its locations, menu and availability.</p>
+        </header>
 
-      <div className="wl-directory-grid">
-        {tenants.map((tenant) => (
-          <Link key={tenant.id} className="wl-directory-card" to={`/${tenant.slug}`}>
-            {tenant.logoUrl ? (
-              <img src={tenant.logoUrl} alt="" className="wl-directory-logo" />
-            ) : (
-              <span className="wl-directory-logo wl-directory-logo-empty" aria-hidden="true">
-                {tenant.name.slice(0, 1)}
-              </span>
-            )}
-            <span className="wl-directory-name">{tenant.name}</span>
-            {tenant.cuisineName ? (
-              <span className="wl-directory-cuisine">{tenant.cuisineName}</span>
-            ) : null}
-          </Link>
-        ))}
-      </div>
-    </main>
+        <div className="wl-directory-grid">
+          {tenants.map((tenant) => (
+            <Link key={tenant.id} className="wl-directory-card" to={`/${tenant.slug}`}>
+              {tenant.logoUrl ? (
+                <img src={tenant.logoUrl} alt="" className="wl-directory-logo" />
+              ) : (
+                <span className="wl-directory-logo wl-directory-logo-empty" aria-hidden="true">
+                  {tenant.name.slice(0, 1)}
+                </span>
+              )}
+              <span className="wl-directory-name">{tenant.name}</span>
+              {tenant.cuisineName ? (
+                <span className="wl-directory-cuisine">{tenant.cuisineName}</span>
+              ) : null}
+            </Link>
+          ))}
+        </div>
+      </main>
+      <PoweredByTavlo surface="light" />
+    </>
   );
 }

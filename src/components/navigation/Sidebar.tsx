@@ -2,7 +2,6 @@ import type { JSX } from "react";
 import { NavLink } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 import type { SessionUser } from "../../types/auth";
-import Logo from "../../assets/Logo_DarkBlue.svg";
 
 type NavItem = {
   to: string;
@@ -123,11 +122,7 @@ export default function Sidebar() {
     <aside className="app-sidebar">
       <div className="sidebar-main">
         <div className="sidebar-brand">
-          <img
-            src={Logo}
-            alt="The TBL guest app logo"
-            className="sidebar-brand-logo"
-          />
+          <span className="sidebar-brand-name">Workspace</span>
         </div>
 
         <nav className="nav-list">

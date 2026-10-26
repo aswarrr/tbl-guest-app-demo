@@ -1,0 +1,18 @@
+.powered-by-tavlo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 18px 24px;
+  color: #948c83;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.powered-by-tavlo-mark {
+  height: 18px;
+  width: auto;
+  object-fit: contain;
+  vertical-align: middle;
+}

@@ -1,6 +1,16 @@
 :root { --wl-accent:#1d3557; --wl-accent-dark:#12233b; --wl-ink:#191816; --wl-paper:#f6f4f1; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--wl-ink); background:#fff; }
 html { scroll-behavior:smooth; } body { background:#fff; color:var(--wl-ink); } button,input,select,textarea { font:inherit; } button,a {-webkit-tap-highlight-color:transparent} img {display:block;max-width:100%}
+/* Studio theme reaches past the React root: SiteLayout sets data-wl-theme
+   and --wl-paper/--wl-ink on <html> for Studio-configured tenants only, so
+   the native canvas (overscroll, first paint, any gap below short pages)
+   never shows the app-shell's default white/gray instead of the theme. */
+html[data-wl-theme="studio"],
+html[data-wl-theme="studio"] body { background:var(--wl-paper); color:var(--wl-ink); }
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.wl-site{min-height:100vh;background:#fff;color:var(--wl-ink)}.wl-skip-link{position:fixed;left:16px;top:-60px;z-index:99999;padding:12px 18px;background:#fff;color:var(--wl-ink);box-shadow:0 6px 30px #0003}.wl-skip-link:focus{top:16px}
+/* Studio (.ws-site) wrapper follows the theme paper color everywhere;
+   legacy tenants (no .ws-site class) keep their fixed white look. */
+.wl-site.ws-site{background:var(--wl-paper)}
+.ws-site .wl-skip-link{background:var(--wl-paper);color:var(--wl-ink)}
 .wl-header{height:88px;display:flex;align-items:center;justify-content:space-between;gap:32px;padding:0 clamp(22px,5vw,80px);border-bottom:1px solid #e9e5df;background:#fffffff5;position:sticky;top:0;z-index:100;backdrop-filter:blur(16px)}.wl-wordmark{display:inline-grid;justify-items:center;line-height:1;color:var(--wl-accent);text-transform:uppercase;min-width:120px}.wl-wordmark-main{font:800 26px/1 Georgia,"Times New Roman",serif;letter-spacing:.08em}.wl-wordmark-sub{margin-top:5px;color:var(--wl-ink);font-size:8px;font-weight:800;letter-spacing:.28em}.wl-nav{display:flex;align-items:center;gap:clamp(18px,2.5vw,38px)}.wl-nav>a:not(.wl-button),.wl-nav-account{color:#4f4a44;font-size:13px;font-weight:650;background:none;border:0;padding:10px 0;cursor:pointer;position:relative}.wl-nav>a:not(.wl-button)::after{content:"";position:absolute;left:0;right:100%;bottom:3px;height:1px;background:var(--wl-accent);transition:right .2s ease}.wl-nav>a.is-active:not(.wl-button),.wl-nav>a:hover:not(.wl-button){color:var(--wl-ink)}.wl-nav>a.is-active:not(.wl-button)::after,.wl-nav>a:hover:not(.wl-button)::after{right:0}.wl-menu-button{display:none;width:44px;height:44px;border:0;background:transparent;padding:11px}.wl-menu-button span:not(.sr-only){display:block;height:1px;background:var(--wl-ink);margin:5px 0}
 .wl-button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 25px;border:1px solid var(--wl-accent);border-radius:999px;background:var(--wl-accent);color:#fff;font-size:13px;font-weight:750;letter-spacing:.025em;cursor:pointer;transition:transform .2s ease,background .2s ease,box-shadow .2s ease;box-shadow:0 10px 28px #8f1d2c29}.wl-button:hover:not(:disabled){background:var(--wl-accent-dark);transform:translateY(-1px);box-shadow:0 14px 34px #8f1d2c3b}.wl-button:focus-visible,.wl-site button:focus-visible,.wl-site a:focus-visible,.wl-site input:focus-visible,.wl-site select:focus-visible,.wl-site textarea:focus-visible{outline:3px solid #8f1d2c40;outline-offset:3px}.wl-button:disabled{opacity:.46;cursor:not-allowed;box-shadow:none}.wl-button-small{min-height:42px;padding:0 20px;font-size:12px}.wl-button-outline{color:var(--wl-accent);background:transparent;box-shadow:none}.wl-button-outline:hover:not(:disabled){color:#fff}.wl-button-dark{background:var(--wl-ink);border-color:var(--wl-ink);box-shadow:0 10px 28px #0002}.wl-button-light{background:#fff;border-color:#fff;color:var(--wl-accent);box-shadow:none}.wl-button-light:hover:not(:disabled){background:var(--wl-paper);color:var(--wl-accent-dark)}.wl-button-ghost{background:transparent;color:var(--wl-ink);border-color:#d7d1c8;box-shadow:none}.wl-button-ghost:hover:not(:disabled){background:var(--wl-paper);color:var(--wl-ink)}.wl-text-link{display:inline-flex;align-items:center;gap:9px;color:var(--wl-accent);font-size:13px;font-weight:750;text-decoration:none}.wl-text-link span{transition:transform .2s}.wl-text-link:hover span{transform:translateX(4px)}.wl-text-link-light{color:#fff}.wl-actions{display:flex;align-items:center;flex-wrap:wrap;gap:24px}
 .wl-kicker{display:block;color:var(--wl-accent);font-size:11px;line-height:1.4;font-weight:800;letter-spacing:.2em;text-transform:uppercase}.wl-kicker-light{color:#f1cdd2}.wl-hero{min-height:calc(100vh - 88px);max-height:900px;padding:clamp(70px,10vw,150px) clamp(24px,7vw,110px);display:flex;flex-direction:column;justify-content:center;background-size:cover;background-position:center;color:#fff;position:relative}.wl-hero-copy{max-width:730px}.wl-hero h1{margin:20px 0 24px;font:400 clamp(55px,8vw,112px)/.88 Georgia,"Times New Roman",serif;letter-spacing:-.055em}.wl-hero-copy>p{max-width:580px;color:#f4eee8;font-size:clamp(17px,2vw,21px);line-height:1.65;margin:0 0 35px}.wl-hero-note{position:absolute;right:clamp(24px,6vw,90px);bottom:44px;display:grid;gap:4px;padding-left:18px;border-left:1px solid #ffffff80;font-size:12px}.wl-hero-note span{color:#e8ded7}.wl-hero-note strong{font-family:Georgia,serif;font-size:16px}
@@ -25,6 +35,40 @@ html { scroll-behavior:smooth; } body { background:#fff; color:var(--wl-ink); } 
 @media(max-width:680px){.wl-header{padding:0 18px}.wl-wordmark-main{font-size:22px}.wl-hero{padding:70px 22px 110px;background-position:58% center}.wl-hero h1{font-size:55px}.wl-hero-note{left:22px;right:auto;bottom:28px}.wl-intro-grid,.wl-menu-section{grid-template-columns:1fr;gap:25px}.wl-section-heading{align-items:start;flex-direction:column}.wl-location-grid{grid-template-columns:1fr}.wl-menu-preview article{grid-template-columns:30px minmax(0,1fr)}.wl-menu-preview article>strong{grid-column:2}.wl-gallery{grid-template-columns:1fr 1fr;height:650px}.wl-gallery img:first-child{grid-column:1/-1}.wl-page-hero{padding-inline:24px}.wl-page-hero h1{font-size:55px}.wl-menu-index{justify-content:flex-start}.wl-menu-section{padding:60px 0}.wl-values{grid-template-columns:1fr}.wl-values article,.wl-values article:first-child{padding:30px 0;border-right:0;border-bottom:1px solid #ffffff20}.wl-location-tabs{justify-content:flex-start;overflow-x:auto}.wl-location-copy{padding:55px 25px}.wl-policy-grid{grid-template-columns:1fr}.wl-policy-grid article{min-height:220px}.wl-branch-select{flex-direction:column}.wl-progress{padding:0 12px}.wl-progress li{font-size:9px}.wl-booking-layout{padding:0 12px}.wl-booking-panel{padding:28px 18px}.wl-booking-summary{grid-template-columns:100px 1fr}.wl-booking-summary>img{width:100px;height:95px}.wl-field-grid{grid-template-columns:1fr}.wl-time-grid{grid-template-columns:repeat(3,1fr)}.wl-seat-map{grid-template-columns:repeat(2,1fr);gap:20px 12px;padding:55px 12px 22px}.wl-review-card,.wl-payment-method-grid{grid-template-columns:1fr}.wl-booking-actions{position:sticky;bottom:0;z-index:10;margin:25px -18px -28px;padding:15px 18px;background:#fff;box-shadow:0 -10px 25px #0001}.wl-booking-actions .wl-button{flex:1}.wl-confirmation-grid{grid-template-columns:repeat(2,1fr)}.wl-payment-backdrop{padding:0}.wl-payment-modal{width:100%;height:100dvh}.wl-footer{grid-template-columns:1fr}.wl-footer-links{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
+/* Editorial locations page, using the same photographic scale as the home hero. */
+.wl-locations-hero{min-height:clamp(480px,68vh,760px);display:flex;align-items:center;justify-content:space-between;gap:40px;padding:clamp(80px,10vw,150px) clamp(24px,7vw,110px);background:var(--wl-ink);background-size:cover;background-position:center;color:#fff}
+.wl-locations-hero-copy{max-width:760px}
+.wl-locations-hero h1{margin:20px 0 24px;font:400 clamp(56px,8vw,110px)/.92 Georgia,"Times New Roman",serif;letter-spacing:-.055em}
+.wl-locations-hero p{max-width:560px;margin:0;color:#f4eee8;font-size:clamp(17px,2vw,21px);line-height:1.65}
+.wl-locations-hero-count{align-self:flex-end;flex:none;padding:8px 0 8px 18px;border-left:1px solid #ffffff80;font:600 12px/1.5 Georgia,serif;letter-spacing:.12em;text-transform:uppercase}
+.wl-locations-switcher{padding:32px clamp(24px,7vw,110px);background:var(--wl-paper);border-bottom:1px solid #e7e0d8}
+.wl-locations-switcher-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.wl-locations-switcher-list button{display:inline-flex;align-items:center;gap:18px;min-height:52px;padding:0 22px;border:1px solid #d9d1c7;border-radius:999px;background:transparent;color:var(--wl-ink);font-size:13px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+.wl-locations-switcher-list button span{font-size:10px;letter-spacing:.1em;opacity:.65}
+.wl-locations-switcher-list button:hover,.wl-locations-switcher-list button.is-active{background:var(--wl-ink);border-color:var(--wl-ink);color:var(--wl-paper)}
+.wl-locations-feature{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);min-height:660px;background:#fff}
+.wl-locations-feature-photo{position:relative;min-height:560px;overflow:hidden;background:#ded6cc}
+.wl-locations-feature-photo img,.wl-locations-photo-placeholder{width:100%;height:100%;object-fit:cover}
+.wl-locations-photo-placeholder{background:linear-gradient(135deg,#d8c7b7,#80736a)}
+.wl-locations-photo-caption{position:absolute;bottom:24px;left:24px;padding:11px 15px;background:#ffffffed;color:#322d28;font-size:11px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+.wl-locations-feature-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:clamp(55px,8vw,125px)}
+.wl-locations-feature-copy h2{margin:20px 0 24px;font-size:clamp(48px,5.5vw,78px)}
+.wl-locations-feature-copy .wl-lead{margin:0;max-width:28ch}
+.wl-locations-actions{display:flex;align-items:center;flex-wrap:wrap;gap:20px 28px;margin-top:38px}
+.wl-locations-info{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(50px,9vw,150px);padding:clamp(85px,10vw,150px) clamp(24px,7vw,110px);background:var(--wl-paper)}
+.wl-locations-info h2{margin:18px 0 18px}
+.wl-locations-info-intro>p{max-width:34ch;color:#716960;font-size:15px;line-height:1.7}
+.wl-locations-info-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:42px 50px}
+.wl-locations-info-block{padding-top:17px;border-top:1px solid #cec5ba}
+.wl-locations-info-block h3{margin:0 0 18px;font:400 25px/1.2 Georgia,serif}
+.wl-locations-info-block>p,.wl-locations-info-block>a:not(.wl-text-link){display:block;margin:0 0 10px;color:#615a53;font-size:14px;line-height:1.7}
+.wl-locations-info-block .wl-text-link{margin-top:9px}
+.wl-locations-hours>div{display:flex;justify-content:space-between;gap:16px;padding:6px 0;color:#615a53;font-size:12px}
+.wl-locations-hours strong{color:var(--wl-ink);font-weight:650;white-space:nowrap}
+.wl-locations-deposit{grid-column:1/-1;margin:0;padding-top:20px;border-top:1px solid #cec5ba;color:#756e66;font-size:12px;line-height:1.6}
+@media(max-width:900px){.wl-locations-feature,.wl-locations-info{grid-template-columns:1fr}.wl-locations-feature-photo{height:58vw;min-height:430px}.wl-locations-info{gap:35px}}
+@media(max-width:680px){.wl-locations-hero{min-height:560px;align-items:flex-start;flex-direction:column;justify-content:center;padding:80px 24px 35px;background-position:60% center}.wl-locations-hero h1{font-size:clamp(54px,14vw,76px)}.wl-locations-hero-count{align-self:flex-start;margin-top:20px}.wl-locations-switcher{padding:28px 24px}.wl-locations-switcher-list{flex-wrap:nowrap;overflow-x:auto;margin-inline:-24px;padding:0 24px 5px;scrollbar-width:none}.wl-locations-switcher-list button{flex:none}.wl-locations-feature-photo{height:75vw;min-height:330px}.wl-locations-feature-copy{padding:60px 24px 70px}.wl-locations-info-details{grid-template-columns:1fr;gap:30px}.wl-locations-deposit{grid-column:auto}}
+
 
 /* Host root: the restaurants with a public site. */
 .wl-directory { max-width:1100px; margin:0 auto; padding:64px 24px 96px; }
@@ -42,3 +86,108 @@ html { scroll-behavior:smooth; } body { background:#fff; color:var(--wl-ink); } 
 .wl-directory-name { font:400 20px/1.2 Georgia,serif; }
 .wl-directory-cuisine { font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:#8a837a; }
 .wl-wordmark-logo { height:32px; width:auto; object-fit:contain; margin-right:10px; }
+
+/* ---------------------------------------------------------------------
+ * Studio theme background coverage.
+ * Every surface below is scoped to `.ws-site` (only ever present on the
+ * Studio-configured wrapper — see StudioSite.tsx) so legacy tenants with
+ * no Studio config keep their existing fixed-white look untouched.
+ * Surfaces that were plain white/paper card backgrounds now follow
+ * --wl-paper directly; surfaces that were a slightly different off-white
+ * shade (translucent headers, seat-map floor, hold banner, etc.) derive
+ * from --wl-paper with color-mix so they stay visually distinct from
+ * pure paper while still tracking the theme. Dark/accent-colored
+ * surfaces (footer, values band, hero, reserve banner, payment backdrop)
+ * are intentional contrasts and are left alone.
+ * --------------------------------------------------------------------- */
+.ws-site .wl-location-card{background:var(--wl-paper)}
+.ws-site .wl-gallery{background:var(--wl-paper)}
+.ws-site .wl-sample-notice{background:color-mix(in srgb, var(--wl-paper) 90%, transparent)}
+.ws-site .wl-menu-index{background:color-mix(in srgb, var(--wl-paper) 92%, transparent)}
+.ws-site .wl-branch-select select{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-policy-grid article{background:var(--wl-paper)}
+.ws-site .wl-reserve-page{background:color-mix(in srgb, var(--wl-paper) 96%, black 2%)}
+.ws-site .wl-progress li span{background:color-mix(in srgb, var(--wl-paper) 96%, black 2%)}
+.ws-site .wl-booking-panel,
+.ws-site .wl-booking-summary{background:var(--wl-paper)}
+.ws-site .wl-branch-options button{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-field-grid input,
+.ws-site .wl-field-grid select,
+.ws-site .wl-request-field textarea{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-time-grid button{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-seat-map{background-color:color-mix(in srgb, var(--wl-paper) 94%, black 4%)}
+.ws-site .wl-seat-map button{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-review-card>div{background:var(--wl-paper)}
+.ws-site .wl-payment-method-grid>button{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-payment-modal{background:var(--wl-paper)}
+.ws-site .wl-payment-frame{background:var(--wl-paper)}
+.ws-site .wl-confirmation-card{background:var(--wl-paper)}
+.ws-site .wl-directory-card{background:var(--wl-paper)}
+.ws-site .wl-location-tabs button,
+.ws-site .wl-floor-tabs button{background:var(--wl-paper);color:var(--wl-ink)}
+.ws-site .wl-location-photo>span{background:var(--wl-paper)}
+@media(max-width:680px){.ws-site .wl-booking-actions{background:var(--wl-paper)}}
+
+/* Muted/secondary text on the surfaces above was hardcoded as an absolute
+   gray tuned for a white/light-paper background. On a dark Studio theme
+   that reads as low-contrast or invisible, so derive it from --wl-ink
+   mixed toward --wl-paper instead — it keeps the "secondary text" feel
+   in any theme while remaining legible. Primary text already uses
+   --wl-ink directly and needs no change. */
+.ws-site .wl-caption,
+.ws-site .wl-card-meta,
+.ws-site .wl-location-card p,
+.ws-site .wl-sample-notice,
+.ws-site .wl-menu-index a,
+.ws-site .wl-menu-list p,
+.ws-site .wl-tag,
+.ws-site .wl-location-tabs button,
+.ws-site .wl-floor-tabs button,
+.ws-site .wl-hours>div,
+.ws-site .wl-deposit-note,
+.ws-site .wl-reserve-header p,
+.ws-site .wl-progress li,
+.ws-site .wl-booking-summary>p,
+.ws-site .wl-booking-summary dt,
+.ws-site .wl-review-card span,
+.ws-site .wl-confirmation-grid span,
+.ws-site .wl-request-field>span,
+.ws-site .wl-policy-confirm p,
+.ws-site .wl-auth-note,
+.ws-site .wl-payment-method-grid>button small,
+.ws-site .wl-payment-methods>p,
+.ws-site .wl-confirmation-card header,
+.ws-site .wl-directory-cuisine{color:color-mix(in srgb, var(--wl-ink) 62%, var(--wl-paper))}
+.ws-site .wl-location-tabs button.is-active,
+.ws-site .wl-floor-tabs button.is-active{color:var(--wl-paper)}
+.ws-site .wl-progress li.is-active{color:var(--wl-ink)}
+
+/* About page */
+.wl-about-page{background:var(--wl-paper);color:var(--wl-ink)}
+.wl-about-hero{position:relative;display:flex;align-items:flex-end;min-height:clamp(600px,82vh,880px);overflow:hidden;padding:clamp(80px,10vw,150px) clamp(24px,7vw,110px);background:#27211d;color:#fff}
+.wl-about-hero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.wl-about-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#100d0bd9 0%,#100d0b68 58%,#100d0b28 100%),linear-gradient(0deg,#100d0b70,transparent 55%)}
+.wl-about-hero-copy,.wl-about-hero-index{position:relative;z-index:1}
+.wl-about-hero-copy{max-width:850px}
+.wl-about-hero h1{max-width:11ch;margin:22px 0 24px;font:400 clamp(68px,9vw,132px)/.9 Georgia,"Times New Roman",serif;letter-spacing:-.065em}
+.wl-about-hero p{max-width:460px;margin:0;color:#f5eee7;font-size:clamp(17px,1.8vw,21px);line-height:1.6}
+.wl-about-hero-index{position:absolute;right:clamp(24px,7vw,110px);bottom:clamp(48px,6vw,90px);padding-left:20px;border-left:1px solid #ffffff9c;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.wl-about-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.8fr);gap:clamp(50px,10vw,180px);align-items:start;padding:clamp(100px,12vw,180px) clamp(24px,7vw,110px)}
+.wl-about-intro h2,.wl-about-moment h2,.wl-about-invite h2{font:400 clamp(48px,5.5vw,84px)/1.02 Georgia,"Times New Roman",serif;letter-spacing:-.045em}
+.wl-about-intro h2{max-width:12ch;margin:22px 0 0}
+.wl-about-intro-copy{padding-top:36px}
+.wl-about-intro-copy p{max-width:55ch;margin:0 0 28px;color:#514940;font-size:clamp(17px,1.55vw,20px);line-height:1.8;white-space:pre-line}
+.wl-about-moment{position:relative;display:flex;align-items:flex-end;min-height:clamp(560px,70vw,850px);overflow:hidden;background:#29221c;color:#fff}
+.wl-about-moment>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.wl-about-moment::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,#0e0b09de,transparent 72%)}
+.wl-about-moment-no-image{min-height:460px;background:radial-gradient(circle at 85% 15%,#5d4534,#1a1714 65%)}
+.wl-about-moment-copy{position:relative;z-index:1;max-width:850px;padding:clamp(60px,8vw,120px) clamp(24px,7vw,110px)}
+.wl-about-moment h2{max-width:12ch;margin:18px 0 16px}
+.wl-about-moment p{max-width:45ch;margin:0;color:#f1e7df;font-size:17px;line-height:1.7}
+.wl-about-invite{text-align:center;padding:clamp(100px,12vw,170px) 24px}
+.wl-about-invite h2{margin:20px auto 16px}
+.wl-about-invite>p{margin:0;color:#6a625a;font-size:17px}
+.wl-about-invite-actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:20px 30px;margin-top:36px}
+.wl-about-page :is(a,button):focus-visible{outline:2px solid var(--wl-accent);outline-offset:4px}
+@media(max-width:900px){.wl-about-intro{grid-template-columns:1fr;gap:24px}.wl-about-intro-copy{padding-top:0}.wl-about-hero-index{bottom:38px}}
+@media(max-width:680px){.wl-about-hero{min-height:min(760px,calc(100svh - 76px));align-items:center;padding:100px 24px 90px}.wl-about-hero::after{background:linear-gradient(90deg,#100d0bbd,#100d0b54),linear-gradient(0deg,#100d0b82,transparent 70%)}.wl-about-hero h1{font-size:clamp(56px,14vw,78px);margin:20px 0}.wl-about-hero p{font-size:16px}.wl-about-hero-index{left:24px;right:auto;bottom:28px;padding-left:12px}.wl-about-intro{padding:85px 24px 95px}.wl-about-intro h2,.wl-about-moment h2,.wl-about-invite h2{font-size:clamp(45px,11vw,62px)}.wl-about-intro-copy p{font-size:16px}.wl-about-moment{min-height:580px}.wl-about-moment-copy{padding:70px 24px}.wl-about-invite{padding:95px 24px 110px}.wl-about-invite-actions{flex-direction:column}}

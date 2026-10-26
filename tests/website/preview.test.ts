@@ -21,3 +21,16 @@ describe('preview boundary',()=>{
     window.location.search='';expect(mode.previewMode).toBe(true);expect(()=>mode.assertLiveRequest()).toThrow('disabled');
   });
 });
+
+
+it('keeps older published designs valid when the shared schema adds fields', async () => {
+  const {createDefaults,normalizeConfig,validateConfig}=await import('../../src/website/contract');
+  const original=createDefaults(company);
+  const legacy=structuredClone(original);
+  Reflect.deleteProperty(legacy, "features");
+  legacy.brand.tagline='Existing restaurant identity';
+  const normalized=normalizeConfig(legacy) as typeof original;
+  expect(validateConfig(normalized,company.id)).toEqual([]);
+  expect(normalized.brand.tagline).toBe('Existing restaurant identity');
+  expect(normalized.features).toEqual(original.features);
+});

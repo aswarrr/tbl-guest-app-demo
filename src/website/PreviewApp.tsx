@@ -40,7 +40,7 @@ function send(type: string, payload: object = {}) {
   if (authorized)
     window.parent.postMessage(
       {
-        channel: "tbl.website",
+        channel: "tavlo.website",
         protocol: 2,
         schema: 1,
         session,
@@ -84,7 +84,7 @@ export default function PreviewApp() {
         event.source !== window.parent ||
         event.origin !== parentOrigin ||
         !isRecord(d) ||
-        d.channel !== "tbl.website" ||
+        d.channel !== "tavlo.website" ||
         d.session !== session ||
         d.tenant !== tenant ||
         d.companyId !== companyId
@@ -124,7 +124,7 @@ export default function PreviewApp() {
         !validSnapshot(snapshot, companyId!, tenant) ||
         typeof d.revision !== "number" ||
         typeof d.selection !== "string" ||
-        !sectionIds.includes(d.selection) ||
+        (d.selection !== "" && !sectionIds.includes(d.selection)) ||
         !["home", "about", "locations", "policies", "reserve", "menu"].includes(
           String(d.page),
         ) ||

@@ -1,10 +1,11 @@
-import Logo from "../assets/Logo_DarkBlue.svg";
-
 type Props = {
   text?: string | null;
   fullscreen?: boolean;
 };
 
+// No restaurant is known yet at this point (auth, routing, the directory
+// list), so there is nothing to brand this wait with — a neutral spinner,
+// never the platform's own logo.
 export default function Loader({
   text = "Loading...",
   fullscreen = false,
@@ -16,16 +17,7 @@ export default function Loader({
       aria-live="polite"
       aria-label={text || "Loading"}
     >
-      <span className="loader-brandmark" aria-hidden="true">
-        <img className="loader-logo loader-logo-base" src={Logo} alt="" />
-        <span className="loader-logo-reveal">
-          <img
-            className="loader-logo loader-logo-highlight"
-            src={Logo}
-            alt=""
-          />
-        </span>
-      </span>
+      <span className="loader-spinner" aria-hidden="true" />
       {text ? <span className="loader-text">{text}</span> : null}
     </div>
   );
