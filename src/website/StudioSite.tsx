@@ -741,7 +741,7 @@ export function StudioSite({
                 {n.label}
               </Link>
             ))}
-          {reservationsOn && <Link className="wl-button" to={path("reserve")}>
+          {reservationsOn && <Link className="wl-button" to={path("reserve")} onClick={() => setOpen(false)}>
             {c.header.reservationLabel}
           </Link>}
         </nav>

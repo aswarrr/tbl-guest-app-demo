@@ -850,3 +850,8 @@
 }
 .ws-site .ws-gallery > * { min-width: 0; max-width: 100%; }
 .ws-site .wl-field-grid label { color: var(--wl-ink); }
+
+/* A two-image mosaic remains balanced on narrow screens. */
+@media (max-width: 720px) {
+  .ws-site .ws-gallery-mosaic > :last-child:nth-child(2) { grid-column: 1 / -1; width: 100%; }
+}
