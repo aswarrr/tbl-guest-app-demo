@@ -754,7 +754,7 @@ export function StudioSite({
         style={{ "--ws-logo-size": `${c.brand.logoSize}px` } as CSSProperties}
       >
         <div>
-          {c.footer.showLogo && (
+          {c.footer.showLogo && (p.preview || media(c.brand.logo)) && (
             <Photo
               src={media(c.brand.logo)}
               className="ws-brand-logo"
