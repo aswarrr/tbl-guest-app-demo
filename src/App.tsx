@@ -1,3 +1,4 @@
+import { buyerDemoEnabled } from "./config/buyer-demo";
 import WebsiteProvider from "./website/WebsiteProvider";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
@@ -16,11 +17,12 @@ import ReservePage from "./pages/site/ReservePage";
 import ConfirmationPage from "./pages/site/ConfirmationPage";
 
 export default function App() {
+  const demoTenant = import.meta.env.VITE_DEFAULT_TENANT_SLUG?.trim();
   return (
     <SiteErrorBoundary>
       <Routes>
         {/* The host root lists the restaurants that have a public site. */}
-        <Route path="/" element={<DirectoryPage />} />
+        <Route path="/" element={buyerDemoEnabled && demoTenant ? <Navigate to={`/${encodeURIComponent(demoTenant)}`} replace /> : <DirectoryPage />} />
 
         {/*
          * Every guest route is scoped to a restaurant. TenantProvider sits
