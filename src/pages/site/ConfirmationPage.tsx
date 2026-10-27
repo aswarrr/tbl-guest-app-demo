@@ -62,7 +62,7 @@ export default function ConfirmationPage() {
           <div><span>Time</span><strong>{formatTime(reservation.reservationTimeLocal)}</strong></div>
           <div><span>Party</span><strong>{reservation.partySize} guests</strong></div>
           <div><span>Table</span><strong>{reservation.tableLabels?.join(", ") || "Assigned table"}</strong></div>
-          <div><span>Deposit</span><strong>{formatMoney(reservation.depositAmount, reservation.depositCurrency || tenant.currency)} paid</strong></div>
+          <div><span>Deposit</span><strong>{reservation.depositAmount > 0 ? `${formatMoney(reservation.depositAmount, reservation.depositCurrency || tenant.currency)} paid` : "No payment required"}</strong></div>
         </div>
       </section>
       <div className="wl-actions wl-confirmation-actions">

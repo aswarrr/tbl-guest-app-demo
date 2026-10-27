@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { buyerDemoEnabled } from "../../config/buyer-demo";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { authService } from "../../services/auth.service";
 import AuthCardHeader from "../../components/auth/AuthCardHeader";
@@ -46,7 +47,7 @@ export default function LoginPage() {
   const tenantPath = useTenantPath();
   const returnTo = safeReturnPath(searchParams.get("returnTo"), tenantSlug);
 
-  const [tab, setTab] = useState<Tab>("mobileOtp");
+  const [tab, setTab] = useState<Tab>(buyerDemoEnabled ? "email" : "mobileOtp");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -135,6 +136,10 @@ export default function LoginPage() {
     <div className="page wl-auth-page">
       <div className="card auth-card">
         <AuthCardHeader title="Login" />
+        {buyerDemoEnabled && <div className="form-note" role="note" style={{ color: "#253324", background: "#edf4eb", padding: 14, borderRadius: 8 }}>
+          <strong>Interactive buyer demo</strong><br />
+          Use the supplied demo email and password. SMS signup, OTP and password-reset delivery are unavailable in this fictional demo. No real charges or dining reservations.
+        </div>}
 
         <div className="tabs">
           <button
@@ -157,6 +162,8 @@ export default function LoginPage() {
             type="button"
             className={`tab ${tab === "mobileOtp" ? "tab-active" : ""}`}
             onClick={() => setTab("mobileOtp")}
+            disabled={buyerDemoEnabled}
+            title={buyerDemoEnabled ? "SMS delivery is unavailable in this demo. Use email and password." : undefined}
           >
             Mobile OTP
           </button>
@@ -237,8 +244,8 @@ export default function LoginPage() {
         )}
 
         <div className="auth-footer">
-          <span>Don&apos;t have an account?</span>
-          <Link to={`${tenantPath("auth/signup")}?returnTo=${encodeURIComponent(returnTo)}`}>Sign up</Link>
+          <span>{buyerDemoEnabled ? "Use the supplied preverified demo account." : "Don’t have an account?"}</span>
+          {!buyerDemoEnabled && <Link to={`${tenantPath("auth/signup")}?returnTo=${encodeURIComponent(returnTo)}`}>Sign up</Link>}
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+import { buyerDemoEnabled } from "../../config/buyer-demo";
 import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
@@ -90,6 +91,12 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+
+  if (buyerDemoEnabled) return <div className="page"><div className="card auth-card">
+    <AuthCardHeader title="Buyer demo access" />
+    <p>New-account verification needs SMS delivery, which is unavailable in this demo. Use the supplied, preverified demo account to explore the real workspace and booking flow.</p>
+    <Link className="button" to={`${tenantPath("auth/login")}?returnTo=${encodeURIComponent(returnTo)}`}>Sign in with demo account</Link>
+  </div></div>;
 
   return (
     <div className="page wl-auth-page">

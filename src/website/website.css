@@ -262,7 +262,7 @@
 }
 .ws-gallery {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
 }
 .ws-gallery-mosaic > :nth-child(4n + 1) {
@@ -831,3 +831,22 @@
 .ws-site .ws-about-page :is(a, button):focus-visible { outline: 2px solid var(--wl-accent); outline-offset: 4px; }
 @media (max-width: 900px) { .ws-site .ws-about-story { grid-template-columns: 1fr; gap: 42px; } .ws-site .ws-about-story-photo > :is(img, .ws-photo-placeholder) { aspect-ratio: 16 / 10; } }
 @media (max-width: 680px) { .ws-site .ws-about-hero { min-height: min(760px, calc(100svh - 76px)); align-items: center; padding: 100px 24px 90px; } .ws-site .ws-about-hero::after { background: linear-gradient(90deg, #100d0bbd, #100d0b54), linear-gradient(0deg, #100d0b82, transparent 70%); } .ws-site .ws-about-hero h1 { font-size: calc(clamp(3.45rem, 14vw, 4.9rem) * var(--ws-heading-scale)); margin: 18px 0; } .ws-site .ws-about-hero p { font-size: 1rem; } .ws-site .ws-about-hero-index { left: 24px; right: auto; bottom: 28px; padding-left: 12px; } .ws-site .ws-about-story { padding: 85px 24px 95px; gap: 40px; } .ws-site .ws-about-story h2, .ws-site .ws-about-values h2, .ws-site .ws-about-invite h2 { font-size: calc(clamp(2.65rem, 11vw, 4rem) * var(--ws-heading-scale)); } .ws-site .ws-about-story p { font-size: 1rem; } .ws-site .ws-about-story-photo > :is(img, .ws-photo-placeholder) { aspect-ratio: 4 / 5; } .ws-site .ws-about-values { padding: 85px 24px 95px; } .ws-site .ws-about-values-heading { display: block; margin-bottom: 45px; } .ws-site .ws-about-values-heading h2 { margin-top: 18px; } .ws-site .ws-about-values-grid { grid-template-columns: 1fr; gap: 38px; } .ws-site .ws-about-values-grid h3 { margin-top: 24px; } .ws-site .ws-about-invite { padding: 95px 24px 110px; } .ws-site .ws-about-invite-actions { flex-direction: column; } }
+
+/* Readable interactive states on configurable tenant themes. */
+.ws-site .wl-button { color: var(--wl-on-accent, #fff); }
+.ws-site .wl-button:hover:not(:disabled) { color: var(--wl-on-accent-dark, #fff); }
+.ws-site .ws-background-brand { color: var(--wl-on-accent, #fff) !important; }
+.ws-site .ws-background-brand .wl-kicker { color: inherit; opacity: .9; }
+.ws-site .ws-background-brand .wl-button {
+  background: var(--wl-on-accent, #fff); color: var(--wl-accent);
+  border-color: var(--wl-on-accent, #fff);
+}
+.ws-site .ws-background-brand .wl-button:hover:not(:disabled) { color: var(--wl-accent-dark); }
+.ws-site .wl-time-grid button.is-selected,
+.ws-site .wl-floor-tabs button.is-active,
+.ws-site .wl-location-tabs button.is-active,
+.ws-site .wl-seat-map button.is-selected {
+  background: var(--wl-accent); color: var(--wl-on-accent, #fff); border-color: var(--wl-accent);
+}
+.ws-site .ws-gallery > * { min-width: 0; max-width: 100%; }
+.ws-site .wl-field-grid label { color: var(--wl-ink); }

@@ -1,4 +1,5 @@
 import { useMedia } from "./media";
+import { contrastTextFor } from "./theme-contrast";
 import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import useTenant from "../hooks/useTenant";
@@ -260,7 +261,7 @@ function MenuPreview() {
   );
 }
 function Home() {
-  const { config: c } = usePresentation();
+  const { config: c, preview } = usePresentation();
   const { branches, tenant } = useTenant();
   const media = useMedia();
   const locationsTrack = useRef<HTMLDivElement>(null);
@@ -288,6 +289,7 @@ function Home() {
   };
   if (!c) return null;
   const h = c.pages.home;
+  const galleryImages = preview ? h.gallery.images : h.gallery.images.filter((ref) => Boolean(media(ref)));
   return (
     <>
       {c.homeOrder.map((id) => {
@@ -361,16 +363,16 @@ function Home() {
             )}
             {!branches.length && <p>No locations added yet.</p>}
           </Selectable>
-        ) : id === "gallery" ? (
+        ) : id === "gallery" ? (galleryImages.length ? (
           <Selectable id="home.gallery" className={`ws-section ws-gallery-section ws-tone-${h.gallery.tone}`}>
             <Copy value={h.gallery} />
             <div className={`ws-gallery ws-gallery-${h.gallery.variant}`}>
-              {h.gallery.images.map((r, i) => (
+              {galleryImages.map((r, i) => (
                 <Photo key={i} src={media(r)} />
               ))}
             </div>
           </Selectable>
-        ) : (
+        ) : null) : (
           <Selectable
             id="home.cta"
             className={`ws-section ws-cta ws-cta-${h.cta.layout} ws-background-${h.cta.background}`}
@@ -650,6 +652,8 @@ export function StudioSite({
   const style = {
     "--wl-accent": t.primaryColor,
     "--wl-accent-dark": t.accentDark,
+    "--wl-on-accent": contrastTextFor(t.primaryColor),
+    "--wl-on-accent-dark": contrastTextFor(t.accentDark),
     "--wl-ink": t.textColor,
     "--wl-paper": t.backgroundColor,
     "--ws-heading": fonts.heading,
