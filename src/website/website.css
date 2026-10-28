@@ -851,6 +851,41 @@
 .ws-site .ws-gallery > * { min-width: 0; max-width: 100%; }
 .ws-site .wl-field-grid label { color: var(--wl-ink); }
 
+/* Match each control's foreground to its actual surface, including themes
+   with outlined buttons and paper-colored booking controls. */
+.ws-site .wl-progress li span { color: var(--wl-ink); }
+.ws-site .wl-progress li.is-active span {
+  background: var(--wl-accent);
+  border-color: var(--wl-accent);
+  color: var(--wl-on-accent, #fff);
+}
+.ws-site.ws-buttons-outline .wl-button,
+.ws-site .wl-button-outline {
+  background: transparent;
+  color: var(--wl-ink);
+}
+.ws-site.ws-buttons-outline .wl-button:hover:not(:disabled),
+.ws-site .wl-button-outline:hover:not(:disabled) {
+  background: var(--wl-accent-dark);
+  color: var(--wl-on-accent-dark, #fff);
+}
+.ws-site .wl-reserve-page .wl-booking-actions .wl-button:not(.wl-button-ghost) {
+  background: var(--wl-accent);
+  border-color: var(--wl-accent);
+  color: var(--wl-on-accent, #fff);
+}
+.ws-site .wl-reserve-page .wl-booking-actions .wl-button:not(.wl-button-ghost):hover:not(:disabled) {
+  background: var(--wl-accent-dark);
+  color: var(--wl-on-accent-dark, #fff);
+}
+.ws-site .wl-button-ghost,
+.ws-site .wl-button-ghost:hover:not(:disabled),
+.ws-site .wl-button-light,
+.ws-site .wl-button-light:hover:not(:disabled) {
+  background: var(--wl-paper);
+  color: var(--wl-ink);
+}
+
 /* A two-image mosaic remains balanced on narrow screens. */
 @media (max-width: 720px) {
   .ws-site .ws-gallery-mosaic > :last-child:nth-child(2) { grid-column: 1 / -1; width: 100%; }
