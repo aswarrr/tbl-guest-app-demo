@@ -45,6 +45,25 @@ describe("white-label customer API", () => {
     await expect(customerService.getTenantMenu("farida-steakhouse")).resolves.toBeNull();
   });
 
+  it("loads published geometry from the public guest endpoint without workspace credentials", async () => {
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: { versionId: "published", floors: [] } } });
+    await expect(customerService.getBranchFloorplan("branch-1")).resolves.toEqual({ versionId: "published", floors: [] });
+    expect(apiMock.get).toHaveBeenCalledWith("/api/mobile/branches/branch-1/floorplan", { skipGlobalLoading: true });
+  });
+
+  it("accepts no published floorplan as an explicit null", async () => {
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: null } });
+    await expect(customerService.getBranchFloorplan("branch-1")).resolves.toBeNull();
+  });
+
+  it("can refresh a stale cached layout against the floors in live availability", async () => {
+    apiMock.get.mockResolvedValueOnce({ data: { ok: true, data: null } });
+    await customerService.getBranchFloorplan("branch-1", ["floor-b", "floor-a"]);
+    expect(apiMock.get).toHaveBeenCalledWith("/api/mobile/branches/branch-1/floorplan", {
+      skipGlobalLoading: true, params: { floors: "floor-a,floor-b" },
+    });
+  });
+
   it("creates a hold through the mobile contract without changing table IDs", async () => {
     const payload = {
       partySize: 4,

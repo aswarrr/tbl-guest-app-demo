@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import PaymentModal from "../../components/site/PaymentModal";
 import PaymentMethodSelector from "../../components/site/PaymentMethodSelector";
+import FloorplanPicker from "../../components/site/floorplan/FloorplanPicker";
+import type { GuestFloorplan } from "../../components/site/floorplan/types";
 import useAuth from "../../hooks/useAuth";
 import useTenant from "../../hooks/useTenant";
 import useTenantPath from "../../hooks/useTenantPath";
@@ -66,6 +68,8 @@ export default function ReservePage() {
   });
   const [times, setTimes] = useState<string[]>([]);
   const [floors, setFloors] = useState<AvailableFloor[]>([]);
+  const [floorplan, setFloorplan] = useState<GuestFloorplan | null>(null);
+  const [tableLoadAttempt, setTableLoadAttempt] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [reservation, setReservation] = useState<CustomerReservation | null>(pendingPayment?.reservation || null);
@@ -75,7 +79,6 @@ export default function ReservePage() {
   const branch = branches.find((item) => item.id === draft.branchId) || branches[0];
   const policy = branch?.policies;
   const requiresPayment = Boolean(policy?.depositRequired && (policy.depositAmount || 0) > 0);
-  const activeFloor = floors.find((floor) => floor.id === draft.floorId) || floors[0];
   const partySizes = useMemo(() => Array.from({ length: Math.max(1, (policy?.maxPartySize || 20) - (policy?.minPartySize || 1) + 1) }, (_, index) => (policy?.minPartySize || 1) + index), [policy?.maxPartySize, policy?.minPartySize]);
   const durations = useMemo(() => {
     const min = policy?.minReservationDurationMinutes || 60;
@@ -104,18 +107,34 @@ export default function ReservePage() {
     let cancelled = false;
     setLoading(true);
     setError("");
-    void customerService.getFloorsAvailability(draft.branchId, { date: draft.reservationDate, partySize: draft.partySize, durationMinutes: draft.durationMinutes, time: draft.reservationTimeLocal })
-      .then((result) => {
+    void Promise.all([
+      customerService.getFloorsAvailability(draft.branchId, { date: draft.reservationDate, partySize: draft.partySize, durationMinutes: draft.durationMinutes, time: draft.reservationTimeLocal }),
+      customerService.getBranchFloorplan(draft.branchId),
+    ])
+      .then(async ([result, initialLayout]) => {
+        let layout = initialLayout;
+        // A newly published version has new floor IDs. Refresh geometry under
+        // that snapshot's cache key if the CDN still has the previous layout.
+        if (result.floors.length && !result.floors.every((floor) => layout?.floors.some((item) => item.id === floor.id))) {
+          layout = await customerService.getBranchFloorplan(draft.branchId, result.floors.map((floor) => floor.id));
+        }
         if (cancelled) return;
         setFloors(result.floors || []);
-        if (result.floors[0]) {
-          setDraft((current) => current.floorId ? current : { ...current, floorId: result.floors[0].id });
-        }
+        setFloorplan(layout);
+        const nextFloors = layout?.floors.length ? layout.floors : result.floors;
+        setDraft((current) => {
+          const floorId = nextFloors.some((floor) => floor.id === current.floorId)
+            ? current.floorId : nextFloors[0]?.id || "";
+          const available = result.floors.find((floor) => floor.id === floorId)?.tables || [];
+          const seatingOption = available.find((option) => option.id === current.seatingOption?.id
+            && sameTableIds(option.tableIds, current.seatingOption.tableIds)) || null;
+          return { ...current, floorId, seatingOption };
+        });
       })
-      .catch((nextError: unknown) => { if (!cancelled) { setFloors([]); setError(nextError instanceof Error ? nextError.message : "Could not load available tables."); } })
+      .catch((nextError: unknown) => { if (!cancelled) { setFloors([]); setFloorplan(null); setDraft((current) => ({ ...current, seatingOption: null })); setError(nextError instanceof Error ? nextError.message : "Could not load the floorplan. Please try again."); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [draft.branchId, draft.durationMinutes, draft.partySize, draft.reservationDate, draft.reservationTimeLocal, draft.step]);
+  }, [draft.branchId, draft.durationMinutes, draft.partySize, draft.reservationDate, draft.reservationTimeLocal, draft.step, tableLoadAttempt]);
 
   const updateDiningDetails = (changes: Partial<ReservationDraft>) => {
     setDraft((current) => ({ ...current, ...changes, reservationTimeLocal: "", floorId: "", seatingOption: null }));
@@ -193,7 +212,24 @@ export default function ReservePage() {
             <div><span className="wl-kicker">Step 2</span><h2>When are you joining us?</h2><div className="wl-field-grid"><label>Party size<select value={draft.partySize} onChange={(event) => updateDiningDetails({ partySize: Number(event.target.value) })}>{partySizes.map((size) => <option key={size} value={size}>{size} {size === 1 ? "guest" : "guests"}</option>)}</select></label><label>Date<input type="date" min={branchLocalDate(branch.timezone)} max={addDays(branchLocalDate(branch.timezone), 90)} value={draft.reservationDate} onChange={(event) => updateDiningDetails({ reservationDate: event.target.value })} /></label><label>Duration<select value={draft.durationMinutes} onChange={(event) => updateDiningDetails({ durationMinutes: Number(event.target.value) })}>{durations.map((duration) => <option value={duration} key={duration}>{duration < 60 ? `${duration} min` : `${Math.floor(duration / 60)}h${duration % 60 ? ` ${duration % 60}m` : ""}`}</option>)}</select></label></div><div className="wl-time-heading"><h3>Available times</h3>{loading ? <span>Checking…</span> : null}</div><div className="wl-time-grid">{times.map((time) => <button className={draft.reservationTimeLocal === time ? "is-selected" : ""} type="button" key={time} onClick={() => setDraft((current) => ({ ...current, reservationTimeLocal: time, floorId: "", seatingOption: null }))}>{formatTime(time)}</button>)}</div>{!loading && times.length === 0 ? <p className="wl-empty">No tables match these details. Try another date or duration.</p> : null}</div>
           ) : null}
           {draft.step === 3 ? (
-            <div><span className="wl-kicker">Step 3</span><h2>Choose your table</h2><p className="wl-caption">This seating selector shows real available tables. Placement is illustrative; exact physical positions are not supplied by the guest API.</p><div className="wl-floor-tabs" role="tablist">{floors.map((floor) => <button type="button" role="tab" aria-selected={activeFloor?.id === floor.id} className={activeFloor?.id === floor.id ? "is-active" : ""} key={floor.id} onClick={() => setDraft((current) => ({ ...current, floorId: floor.id, seatingOption: null }))}>{floor.name}</button>)}</div><div className="wl-seat-map"><div className="wl-seat-map-label">Dining room · illustrative layout</div>{activeFloor?.tables.map((table) => <button type="button" className={`${table.type === "COMBO" ? "is-combo" : ""} ${draft.seatingOption?.id === table.id ? "is-selected" : ""}`} key={table.id} onClick={() => setDraft((current) => ({ ...current, floorId: activeFloor.id, seatingOption: table }))}><span className="wl-table-shape">{table.type === "COMBO" ? table.tableIds.length : ""}</span><strong>{table.name}</strong><small>{table.type === "COMBO" ? `${table.tableIds.length} joined tables` : "Available"}</small></button>)}</div>{!loading && !activeFloor?.tables.length ? <p className="wl-empty">No tables remain on this floor for the selected time.</p> : null}</div>
+            <div>
+              <span className="wl-kicker">Step 3</span>
+              <h2>Choose your table</h2>
+              <p className="wl-caption">Explore the dining room and tap an available table. Dimmed tables are unavailable for your party and time.</p>
+              {loading ? <p role="status">Loading the dining room…</p> : error ? (
+                <button className="wl-button wl-button-ghost" type="button" onClick={() => setTableLoadAttempt((attempt) => attempt + 1)}>Try again</button>
+              ) : (
+                <FloorplanPicker
+                  key={`${draft.branchId}:${draft.floorId}`}
+                  floorplan={floorplan}
+                  floors={floors}
+                  activeFloorId={draft.floorId}
+                  selected={draft.seatingOption}
+                  onFloorChange={(floorId) => setDraft((current) => ({ ...current, floorId, seatingOption: null }))}
+                  onSelect={(floorId, option) => setDraft((current) => ({ ...current, floorId, seatingOption: option }))}
+                />
+              )}
+            </div>
           ) : null}
           {draft.step === 4 ? (
             <div><span className="wl-kicker">Step 4</span><h2>Review your reservation</h2><div className="wl-review-card"><div><span>Location</span><strong>{branchShortName(branch)}</strong></div><div><span>Date &amp; time</span><strong>{formatDate(draft.reservationDate, branch.timezone)} · {formatTime(draft.reservationTimeLocal)}</strong></div><div><span>Party</span><strong>{draft.partySize} guests · {draft.durationMinutes} min</strong></div><div><span>Table</span><strong>{draft.seatingOption?.name} · {floors.find((floor) => floor.id === draft.floorId)?.name}</strong></div></div><label className="wl-request-field">Special requests <span>Optional</span><textarea disabled={Boolean(reservation)} maxLength={500} value={draft.specialRequest} onChange={(event) => setDraft((current) => ({ ...current, specialRequest: event.target.value }))} placeholder="Allergies, celebrations, accessibility or seating needs…" /></label><div className="wl-policy-confirm"><strong>{requiresPayment ? `${formatMoney(policy?.depositAmount || 0, policy?.depositCurrency || tenant.currency)} deposit due now` : "No deposit required"}</strong><p>Free cancellation up to {policy?.freeCancelWindowHours ?? 0} hours before your booking. Tables are held for {policy?.gracePeriodMinutes ?? 0} minutes after the reservation time.</p></div>{requiresPayment ? <PaymentMethodSelector value={draft.paymentMethod ?? null} disabled={Boolean(reservation)} onChange={(paymentMethod: PaymentMethod) => setDraft((current) => ({ ...current, paymentMethod }))} /> : null}{!isAuthenticated ? <p className="wl-auth-note">{buyerDemoEnabled ? "Sign in with the supplied demo account next. Your choices are saved." : "You’ll sign in or create an account next. Your choices are saved."}</p> : null}</div>

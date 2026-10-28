@@ -1,4 +1,5 @@
 import { api } from "../services/api";
+import type { GuestFloorplan } from "../components/site/floorplan/types";
 import type {
   AvailableFloor,
   CustomerReservation,
@@ -57,6 +58,14 @@ export const customerService = {
   async getBranch(branchId: string) {
     const response = await api.get(`/api/mobile/branches/${branchId}`, { skipGlobalLoading: true });
     return unwrap<RestaurantBranchDetail>(response.data);
+  },
+
+  async getBranchFloorplan(branchId: string, publishedFloorIds?: string[]) {
+    const response = await api.get(`/api/mobile/branches/${branchId}/floorplan`, {
+      skipGlobalLoading: true,
+      ...(publishedFloorIds?.length ? { params: { floors: [...publishedFloorIds].sort().join(",") } } : {}),
+    });
+    return unwrap<GuestFloorplan | null>(response.data);
   },
 
   async getBlindAvailability(
